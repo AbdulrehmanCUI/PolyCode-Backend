@@ -11,7 +11,6 @@ export default function Navbar({
   const location = useLocation();
   const inputRef = useRef(null);
 
-  // Keyboard shortcut: Cmd/Ctrl + K
   useEffect(() => {
     const handler = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -66,7 +65,6 @@ export default function Navbar({
       <div className="navbar-links">
         <Link to="/hub" className={isActive('/hub')}>Home</Link>
         <Link to="/search" className={isActive('/search')}>Search</Link>
-        {/* Playground link */}
         <NavLink
           to="/playground"
           className={({ isActive: a }) =>
@@ -74,6 +72,14 @@ export default function Navbar({
           }
         >
           ▶ Playground
+        </NavLink>
+        <NavLink
+          to="/daily-challenge"
+          className={({ isActive: a }) =>
+            `navbar-challenge-link ${a ? 'active' : ''}`
+          }
+        >
+          🏆 Daily Challenge
         </NavLink>
         <button
           type="button"

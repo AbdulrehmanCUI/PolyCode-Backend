@@ -21,6 +21,7 @@ const SearchPage = lazy(() => import("./features/docs/pages/SearchPage"));
 const PlaygroundPage = lazy(
   () => import("./features/playground/pages/PlaygroundPage"),
 );
+const DailyChallengePage = lazy(() => import("./pages/DailyChallenges"));
 
 // Minimal inline fallback – shown while the lazy chunk downloads
 const PageFallback = () => (
@@ -123,6 +124,12 @@ function App() {
                             onToggleSidebar={toggleSidebar}
                             sidebarOpen={isSidebarOpen}
                           />
+                        }
+                      />
+                      <Route
+                        path="/daily-challenge"
+                        element={
+                          <DailyChallengePage theme={theme} />
                         }
                       />
                       <Route path="*" element={<Navigate to="/" />} />
