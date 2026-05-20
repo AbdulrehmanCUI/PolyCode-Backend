@@ -55,6 +55,31 @@ const PageFallback = () => (
   </div>
 );
 
+function AppFooter() {
+  return (
+    <footer className="app-footer">
+      <div className="app-footer-inner">
+        <a
+          className="app-footer-brand"
+          href="https://www.quantumlogicslimited.com"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Quantum Logics"
+        >
+          <img
+            src="https://www.quantumlogicslimited.com/logo.png"
+            alt="Quantum Logics logo"
+            className="app-footer-logo"
+          />
+          <span>Quantum Logics</span>
+        </a>
+        <span className="app-footer-divider" />
+        <span className="app-footer-project">Polycode</span>
+      </div>
+    </footer>
+  );
+}
+
 function ScrollToTop() {
   const { pathname, search } = useLocation();
 
@@ -64,9 +89,11 @@ function ScrollToTop() {
 
     html.style.scrollBehavior = "auto";
     window.scrollTo(0, 0);
-    document.querySelectorAll(".main-content, .learn-content").forEach((node) => {
-      node.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    });
+    document
+      .querySelectorAll(".main-content, .learn-content")
+      .forEach((node) => {
+        node.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
 
     return () => {
       html.style.scrollBehavior = previousScrollBehavior;
@@ -196,6 +223,7 @@ function ThemedShell({ theme, children }) {
   return (
     <div className={`app ${theme === "light" ? "theme-light" : ""}`}>
       {children}
+      <AppFooter />
     </div>
   );
 }
@@ -220,7 +248,12 @@ function StackPickerShell({ children, savedTheme }) {
     };
   }, [savedTheme]);
 
-  return <div className="app stack-picker-dark">{children}</div>;
+  return (
+    <div className="app stack-picker-dark">
+      {children}
+      <AppFooter />
+    </div>
+  );
 }
 
 function AppRoutes() {
@@ -238,7 +271,9 @@ function AppRoutes() {
       setSelectedLanguage(language);
       localStorage.setItem("selectedLanguage", language);
       if (!options.stay) {
-        navigate(`/language/${encodeURIComponent(language)}`, { replace: true });
+        navigate(`/language/${encodeURIComponent(language)}`, {
+          replace: true,
+        });
       }
     },
     [navigate],

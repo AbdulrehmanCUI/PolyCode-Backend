@@ -190,6 +190,95 @@ body {
   z-index: 1;
 }
 
+/* ── Global Footer ───────────────────────────── */
+.app-footer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 18px clamp(18px, 4vw, 44px) 22px;
+  color: var(--txt-2);
+}
+
+.app-footer-inner {
+  width: min(1180px, 100%);
+  min-height: 54px;
+  margin: 0 auto;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(0, 242, 255, 0.08), transparent 35%),
+    linear-gradient(315deg, rgba(204, 255, 0, 0.08), transparent 38%),
+    rgba(255, 255, 255, 0.03);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(18px) saturate(150%);
+}
+
+.app-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--txt-0);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.app-footer-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.app-footer-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border-2);
+}
+
+.app-footer-project {
+  color: var(--txt-1);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.theme-light .app-footer-inner {
+  background:
+    linear-gradient(135deg, rgba(14, 165, 233, 0.1), transparent 35%),
+    linear-gradient(315deg, rgba(4, 120, 87, 0.1), transparent 38%),
+    rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 560px) {
+  .app-footer {
+    padding: 14px 12px 18px;
+  }
+
+  .app-footer-inner {
+    min-height: 50px;
+    gap: 10px;
+    padding: 9px 12px;
+  }
+
+  .app-footer-logo {
+    width: 24px;
+    height: 24px;
+  }
+
+  .app-footer-brand,
+  .app-footer-project {
+    font-size: 0.78rem;
+  }
+}
+
 /* ══════════════════════════════════════════════
    NAVBAR
 ══════════════════════════════════════════════ */
