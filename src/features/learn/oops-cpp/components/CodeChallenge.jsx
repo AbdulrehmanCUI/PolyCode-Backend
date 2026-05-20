@@ -225,6 +225,14 @@ export default function CodeChallenge({
     return trimmed;
   }
 
+  function stripComments(source = "") {
+    return source
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .split("\n")
+      .map((line) => line.replace(/\/\/.*$/, ""))
+      .join("\n");
+  }
+
   function splitArgs(value = "") {
     const args = [];
     let current = "";
@@ -271,12 +279,14 @@ export default function CodeChallenge({
   }
 
   function collectObjectOutput(source, baseValues) {
+    const cleanSource = stripComments(source);
     const output = [];
     const classDefs = [];
-    const classRegex = /class\s+([A-Za-z_]\w*)\s*\{([\s\S]*?)\};/g;
+    const globalMethods = new Map();
+    const classRegex = /class\s+([A-Za-z_]\w*)\s*(?::\s*([^{]+))?\{([\s\S]*?)\};/g;
 
-    for (const classMatch of source.matchAll(classRegex)) {
-      const [, className, classBody] = classMatch;
+    for (const classMatch of cleanSource.matchAll(classRegex)) {
+      const [, className, inheritance = "", classBody] = classMatch;
       const constructorRegex = new RegExp(
         `${className}\\s*\\(([^)]*)\\)\\s*(?::\\s*([^{}]*))?\\s*\\{([\\s\\S]*?)\\}`,
         "g",
@@ -296,17 +306,29 @@ export default function CodeChallenge({
           match[2] || "",
         ]),
       );
+      methods.forEach((body, name) => {
+        if (!globalMethods.has(name)) globalMethods.set(name, body);
+      });
+      const bases = inheritance
+        .split(",")
+        .map((base) =>
+          base
+            .replace(/\b(public|private|protected|virtual)\b/g, "")
+            .trim(),
+        )
+        .filter(Boolean);
 
-      classDefs.push({ className, constructors, methods });
+      classDefs.push({ className, constructors, methods, bases });
     }
 
     classDefs.forEach(({ className, constructors, methods }) => {
+      const availableMethods = new Map([...globalMethods, ...methods]);
       const objectRegex = new RegExp(
         `\\b${className}\\s+([A-Za-z_]\\w*)\\s*\\(([^;]*)\\)\\s*;`,
         "g",
       );
 
-      for (const objectMatch of source.matchAll(objectRegex)) {
+      for (const objectMatch of cleanSource.matchAll(objectRegex)) {
         const [, objectName, rawArgs] = objectMatch;
         const args = splitArgs(rawArgs).map((arg) =>
           resolveToken(arg, baseValues),
@@ -346,7 +368,18 @@ export default function CodeChallenge({
           baseValues.set(key, value);
           baseValues.set(`${objectName}.${key}`, value);
         });
-        methods.forEach((methodBody, methodName) => {
+        const objectMemberAssignments = new RegExp(
+          `\\b${objectName}\\.([A-Za-z_]\\w*)\\s*=\\s*("[^"]*"|'[^']*'|[-+]?\\d+(?:\\.\\d+)?|true|false)\\s*;`,
+          "g",
+        );
+        for (const assignmentMatch of cleanSource.matchAll(objectMemberAssignments)) {
+          const [, memberName, rawValue] = assignmentMatch;
+          const value = cleanLiteral(rawValue);
+          memberValues.set(memberName, value);
+          baseValues.set(memberName, value);
+          baseValues.set(`${objectName}.${memberName}`, value);
+        }
+        availableMethods.forEach((methodBody, methodName) => {
           const returnMatch = methodBody.match(/return\s+([^;]+);/);
           if (!returnMatch) return;
 
@@ -361,22 +394,45 @@ export default function CodeChallenge({
           `\\b${objectName}\\.([A-Za-z_]\\w*)\\s*\\(\\s*\\)\\s*;`,
           "g",
         );
-        for (const callMatch of source.matchAll(callRegex)) {
-          const methodBody = methods.get(callMatch[1]);
+        for (const callMatch of cleanSource.matchAll(callRegex)) {
+          const methodBody = availableMethods.get(callMatch[1]);
           if (!methodBody) continue;
 
-          methodBody.split("\n").forEach((rawLine) => {
-            const line = rawLine.split("//")[0];
-            if (!line.includes("cout")) return;
-            const rendered = line
-              .split("<<")
-              .map((part) => renderCoutPart(part, baseValues))
-              .join("");
-            if (rendered) output.push(rendered);
-          });
+          output.push(...renderMethodBody(methodBody, availableMethods, baseValues));
         }
       }
     });
+
+    return output;
+  }
+
+  function renderMethodBody(methodBody, methods, values, seen = new Set()) {
+    const output = [];
+    const statementRegex = /([^;]+);/g;
+
+    for (const statementMatch of methodBody.matchAll(statementRegex)) {
+      const statement = statementMatch[1].trim();
+      if (!statement) continue;
+
+      if (statement.includes("cout")) {
+        const rendered = statement
+          .split("<<")
+          .map((part) => renderCoutPart(part, values))
+          .join("");
+        if (rendered) output.push(rendered);
+        continue;
+      }
+
+      const callMatch = statement.match(/^([A-Za-z_]\w*)\s*\(\s*\)$/);
+      if (!callMatch || seen.has(callMatch[1])) continue;
+
+      const nestedBody = methods.get(callMatch[1]);
+      if (!nestedBody) continue;
+
+      seen.add(callMatch[1]);
+      output.push(...renderMethodBody(nestedBody, methods, values, seen));
+      seen.delete(callMatch[1]);
+    }
 
     return output;
   }

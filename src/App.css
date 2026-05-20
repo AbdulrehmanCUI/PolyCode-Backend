@@ -5646,6 +5646,18 @@ body {
   font-family: var(--font-mono, "Fira Code", monospace);
 }
 
+.oops-code-block ::selection,
+.oops-code-block *::selection,
+.oops-code-block .token::selection,
+.oops-code-block span::selection,
+.oops-code-block code::selection,
+.oops-code-block pre::selection {
+  background: #0ea5e9 !important;
+  color: #f8fbff !important;
+  -webkit-text-fill-color: #f8fbff !important;
+  text-shadow: none !important;
+}
+
 .oops-pre pre {
   white-space: pre-wrap !important;
   word-break: break-word;
