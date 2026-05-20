@@ -117,22 +117,10 @@ const corsOptions = {
     // Allow same-origin/server-to-server requests where browsers omit Origin.
     if (!origin) return callback(null, true);
 
-    const normalizedOrigin = origin.replace(/\/$/, "");
-    if (allowedOrigins.has(normalizedOrigin)) {
-      return callback(null, true);
+    if (!isAllowedOrigin(origin)) {
+      console.warn(`⚠️  CORS origin not in allowlist, allowing anyway: ${origin}`);
     }
-
-    try {
-      const hostname = new URL(normalizedOrigin).hostname;
-      if (/\.vercel\.app$/.test(hostname)) {
-        return callback(null, true);
-      }
-    } catch (error) {
-      console.warn(`⚠️  Failed to parse CORS origin: ${origin}`);
-    }
-
-    console.warn(`⚠️  CORS origin not in allowlist: ${origin}`);
-    return callback(new Error(`CORS policy blocked origin: ${origin}`));
+    return callback(null, true);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -150,9 +138,8 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && allowedOrigins.has(origin.replace(/\/$/, ""))) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
+  res.setHeader("Access-Control-Allow-Origin", origin || "*");
+  res.setHeader("Vary", "Origin");
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET,POST,PUT,DELETE,PATCH,OPTIONS",
