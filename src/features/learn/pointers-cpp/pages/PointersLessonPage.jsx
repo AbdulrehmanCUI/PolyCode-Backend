@@ -3,9 +3,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import CodeChallenge from "../../oops-cpp/components/CodeChallenge";
 import ConceptCard from "../../oops-cpp/components/ConceptCard";
 import OopsSidebar from "../../oops-cpp/components/OopsSidebar";
+import LearnProfileMenu from "../../shared/LearnProfileMenu";
 import {
   POINTER_CHAPTERS,
   POINTER_LESSONS,
+  POINTER_TOTAL_XP,
 } from "../data/pointersCurriculum";
 import usePointersProgress from "../hooks/usePointersProgress";
 
@@ -142,6 +144,11 @@ export default function PointersLessonPage() {
 
   const isCompleted = !!progress[lessonId];
   const isBookmarked = bookmarks.includes(lessonId);
+  const completedCount = Object.keys(progress).length;
+  const earnedXP = POINTER_LESSONS.filter((item) => progress[item.id]).reduce(
+    (sum, item) => sum + item.xp,
+    0,
+  );
 
   async function handleChallengeComplete() {
     await completeLesson(lesson);
@@ -203,11 +210,17 @@ export default function PointersLessonPage() {
           >
             {focusMode ? "Exit Focus" : "Focus"}
           </button>
-        </div>
-
-        <div className="oops-lesson-status-strip">
-          <span>{user ? `Signed in as ${user.username}` : "Guest mode"}</span>
-          <span>Pointer progress saved locally</span>
+          <LearnProfileMenu
+            user={user}
+            trackTitle="Pointers C++"
+            syncLabel="Pointer progress saved locally"
+            completedCount={completedCount}
+            totalLessons={POINTER_LESSONS.length}
+            earnedXP={earnedXP}
+            totalXP={POINTER_TOTAL_XP}
+            bookmarksCount={bookmarks.length}
+            streak={0}
+          />
         </div>
 
         <div className="oops-tabs">

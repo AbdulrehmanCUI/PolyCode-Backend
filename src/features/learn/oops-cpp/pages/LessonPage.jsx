@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ALL_LESSONS } from "../data/oopsCurriculum";
+import { ALL_LESSONS, TOTAL_XP } from "../data/oopsCurriculum";
 import ConceptCard from "../components/ConceptCard";
 import CodeChallenge from "../components/CodeChallenge";
 import OopsSidebar from "../components/OopsSidebar";
+import LearnProfileMenu from "../../shared/LearnProfileMenu";
 import useOopsProgress from "../hooks/useOopsProgress";
 
 function plainLessonText(text = "") {
@@ -71,6 +72,7 @@ export default function LessonPage() {
   const {
     user,
     syncState,
+    remoteProgress,
     completedMap: progress,
     savedCodeMap,
     notesMap,
@@ -146,6 +148,19 @@ export default function LessonPage() {
 
   const isCompleted = !!progress[lessonId];
   const isBookmarked = bookmarks.includes(lessonId);
+  const completedCount = Object.keys(progress).length;
+  const earnedXP = ALL_LESSONS.filter((item) => progress[item.id]).reduce(
+    (sum, item) => sum + item.xp,
+    0,
+  );
+  const syncLabel =
+    syncState === "synced"
+      ? "Progress saved to MongoDB"
+      : syncState === "syncing"
+        ? "Syncing progress..."
+        : user
+          ? "Progress sync pending"
+          : "Progress saved locally";
 
   async function handleChallengeComplete() {
     await completeLesson(lesson);
@@ -207,19 +222,17 @@ export default function LessonPage() {
           >
             {focusMode ? "Exit Focus" : "Focus"}
           </button>
-        </div>
-
-        <div className="oops-lesson-status-strip">
-          <span>{user ? `Signed in as ${user.username}` : "Guest mode"}</span>
-          <span>
-            {syncState === "synced"
-              ? "Progress saved to MongoDB"
-              : syncState === "syncing"
-                ? "Syncing progress..."
-                : user
-                  ? "Progress sync pending"
-                  : "Progress saved locally"}
-          </span>
+          <LearnProfileMenu
+            user={user}
+            trackTitle="OOPs C++"
+            syncLabel={syncLabel}
+            completedCount={completedCount}
+            totalLessons={ALL_LESSONS.length}
+            earnedXP={earnedXP}
+            totalXP={TOTAL_XP}
+            bookmarksCount={bookmarks.length}
+            streak={remoteProgress?.currentStreak || 0}
+          />
         </div>
 
         {/* Tab switcher — FCC style */}
