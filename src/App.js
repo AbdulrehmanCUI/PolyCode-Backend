@@ -35,6 +35,12 @@ const OopsHub = lazy(() => import("./features/learn/oops-cpp/pages/OopsHub"));
 const LessonPage = lazy(
   () => import("./features/learn/oops-cpp/pages/LessonPage"),
 );
+const PointersHub = lazy(
+  () => import("./features/learn/pointers-cpp/pages/PointersHub"),
+);
+const PointersLessonPage = lazy(
+  () => import("./features/learn/pointers-cpp/pages/PointersLessonPage"),
+);
 
 const PageFallback = () => (
   <div className="loading">
@@ -132,6 +138,21 @@ function MainApp({
 }
 
 function LearnShell({ theme, onToggleTheme, onGoToStackPicker, children }) {
+  const location = useLocation();
+
+  React.useEffect(() => {
+    if (!location.pathname.startsWith("/learn/")) return;
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.querySelector(".main-content.learn-content")?.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+    });
+  }, [location.pathname]);
+
   return (
     <>
       <Navbar
@@ -280,6 +301,48 @@ function AppRoutes() {
                 onGoToStackPicker={goToStackPicker}
               >
                 <LessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/pointers-cpp"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onToggleTheme={toggleTheme}
+                onGoToStackPicker={goToStackPicker}
+              >
+                <PointersHub />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/pointers-cpp/lesson/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onToggleTheme={toggleTheme}
+                onGoToStackPicker={goToStackPicker}
+              >
+                <PointersLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/pointers-cpp/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onToggleTheme={toggleTheme}
+                onGoToStackPicker={goToStackPicker}
+              >
+                <PointersLessonPage />
               </LearnShell>
             </ThemedShell>
           }

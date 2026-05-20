@@ -4058,6 +4058,27 @@ body {
   color: var(--vscode-blue-2, #3794ff);
 }
 
+.pointers-hub .oops-hero-accent {
+  color: var(--cyan, #00d4ff);
+}
+
+.pointers-hero {
+  background:
+    linear-gradient(135deg, rgba(0, 212, 255, 0.16), transparent 44%),
+    linear-gradient(225deg, rgba(184, 255, 0, 0.08), transparent 38%),
+    var(--vscode-panel, #252526);
+}
+
+.pointers-hero::before {
+  background:
+    linear-gradient(rgba(184, 255, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  border-radius: 0;
+  opacity: 0.55;
+  transform: rotate(8deg);
+}
+
 .oops-hero-sub {
   color: var(--txt-2, #6e7891);
   font-size: 0.95rem;
