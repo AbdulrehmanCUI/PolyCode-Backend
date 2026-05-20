@@ -4953,6 +4953,7 @@ body {
 
 .profile-total-progress span,
 .profile-overview-grid span,
+.profile-activity-head span,
 .profile-track-head span,
 .profile-track-stats span,
 .profile-next-row span {
@@ -4978,6 +4979,7 @@ body {
 }
 
 .profile-overview-grid div,
+.profile-activity-card,
 .profile-track-card {
   border: 1px solid var(--border, #1e2433);
   border-radius: 10px;
@@ -4993,6 +4995,88 @@ body {
   color: var(--txt-0, #f0f0ff);
   font-size: 1.05rem;
   margin-top: 6px;
+}
+
+.profile-activity-card {
+  margin: 0 0 18px;
+  padding: 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+}
+
+.profile-activity-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.profile-activity-head h2 {
+  margin: 5px 0 0;
+  color: var(--txt-0, #f0f0ff);
+  font-size: 1.14rem;
+}
+
+.profile-activity-head strong {
+  color: var(--cyan, #00d4ff);
+  font-size: 0.92rem;
+}
+
+.profile-activity-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-flow: column;
+  grid-auto-columns: 12px;
+  gap: 5px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 3px 2px 8px;
+}
+
+.profile-activity-cell,
+.profile-activity-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #161b22;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.045);
+}
+
+.profile-activity-cell[data-level="1"],
+.profile-activity-legend i[data-level="1"] {
+  background: rgba(14, 165, 233, 0.34);
+}
+
+.profile-activity-cell[data-level="2"],
+.profile-activity-legend i[data-level="2"] {
+  background: rgba(14, 165, 233, 0.58);
+}
+
+.profile-activity-cell[data-level="3"],
+.profile-activity-legend i[data-level="3"] {
+  background: rgba(34, 211, 238, 0.78);
+}
+
+.profile-activity-cell[data-level="4"],
+.profile-activity-legend i[data-level="4"] {
+  background: #b8ff00;
+}
+
+.profile-activity-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+  color: var(--txt-2, #6e7891);
+  font-size: 0.78rem;
+}
+
+.profile-activity-legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
 }
 
 .profile-track-grid {
