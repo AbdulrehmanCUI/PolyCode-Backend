@@ -374,8 +374,12 @@ export default function CodeChallenge({
       /\b(?:string|int|double|float|char|bool|auto)\s+([A-Za-z_]\w*)\s*=\s*("[^"]*"|'[^']*'|[-+]?\d+(?:\.\d+)?|true|false)/g;
     const arrayDeclarations =
       /\b(?:int|double|float|char|bool|string)\s+([A-Za-z_]\w*)\s*\[\s*\]\s*=\s*\{([^}]*)\}/g;
+    const twoDArrayDeclarations =
+      /\b(?:int|double|float|char|bool|string)\s+([A-Za-z_]\w*)\s*\[\s*\d+\s*\]\s*\[\s*\d+\s*\]\s*=\s*\{([\s\S]*?)\}\s*;/g;
     const pointerDeclarations =
       /\b(?:int|double|float|char|bool|string)\s*\*\s*([A-Za-z_]\w*)\s*=\s*(nullptr|&\s*[A-Za-z_]\w*|[A-Za-z_]\w*)/g;
+    const rowPointerDeclarations =
+      /\b(?:int|double|float|char|bool|string)\s*\(\s*\*\s*([A-Za-z_]\w*)\s*\)\s*\[\s*\d+\s*\]\s*=\s*([A-Za-z_]\w*)/g;
     const newPointerDeclarations =
       /\b(?:int|double|float|char|bool|string)\s*\*\s*([A-Za-z_]\w*)\s*=\s*new\s+(?:int|double|float|char|bool|string)\s*\(([^)]*)\)/g;
     const smartPointerDeclarations =
@@ -396,6 +400,28 @@ export default function CodeChallenge({
       arrays.set(arrayName, items);
       items.forEach((item, index) => {
         values.set(`${arrayName}[${index}]`, item);
+      });
+    }
+    for (const match of source.matchAll(twoDArrayDeclarations)) {
+      const arrayName = match[1];
+      const rowMatches = [...match[2].matchAll(/\{([^{}]*)\}/g)];
+      rowMatches.forEach((rowMatch, rowIndex) => {
+        splitArgs(rowMatch[1]).forEach((item, columnIndex) => {
+          values.set(
+            `${arrayName}[${rowIndex}][${columnIndex}]`,
+            cleanLiteral(item),
+          );
+        });
+      });
+    }
+    for (const match of source.matchAll(rowPointerDeclarations)) {
+      const pointerName = match[1];
+      const arrayName = match[2];
+      values.set(pointerName, arrayName);
+      [...values.entries()].forEach(([key, value]) => {
+        if (key.startsWith(`${arrayName}[`)) {
+          values.set(key.replace(arrayName, pointerName), value);
+        }
       });
     }
     for (const match of source.matchAll(pointerDeclarations)) {

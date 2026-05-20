@@ -1,6 +1,219 @@
 // PolyCode — Pointers in C++ Curriculum
 // Focus: beginner-friendly mental models, visual steps, and safe modern C++.
 
+const FINAL_POINTER_QUESTIONS = [
+  {
+    type: "quiz",
+    question: "What does `&value` produce?",
+    options: ["The value itself", "The address of value", "A heap allocation", "A copy of value"],
+    answer: 1,
+    explanation: "`&value` is the address-of operator. It gives a pointer-compatible address.",
+  },
+  {
+    type: "quiz",
+    question: "What does `*p` do when `p` stores a valid address?",
+    options: ["Deletes p", "Reads or writes the value at p's address", "Creates an array", "Moves p forward"],
+    answer: 1,
+    explanation: "`*p` dereferences the pointer, so the object at that address is used.",
+  },
+  {
+    type: "quiz",
+    question: "Which pointer value means no object is currently targeted?",
+    options: ["nullptr", "0xFF", "delete", "&main"],
+    answer: 0,
+    explanation: "`nullptr` is the modern C++ null pointer value.",
+  },
+  {
+    type: "quiz",
+    question: "What should you do before dereferencing a pointer that may be null?",
+    options: ["Call delete", "Check it against nullptr", "Cast it to int", "Use sizeof"],
+    answer: 1,
+    explanation: "A nullable pointer should be checked before `*p` is used.",
+  },
+  {
+    type: "quiz",
+    question: "For `int a[3] = {4, 5, 6}; int* p = a;`, what is `*(p + 1)`?",
+    options: ["4", "5", "6", "The array size"],
+    answer: 1,
+    explanation: "Pointer arithmetic on `int*` moves by elements, so `p + 1` points at `a[1]`.",
+  },
+  {
+    type: "quiz",
+    question: "Which expression is equivalent to `arr[i]` for a normal array?",
+    options: ["*(arr + i)", "&arr + i", "*arr + *i", "arr * i"],
+    answer: 0,
+    explanation: "Array indexing is defined in terms of pointer arithmetic and dereference.",
+  },
+  {
+    type: "quiz",
+    question: "What is the safest default for owning one heap object?",
+    options: ["int*", "unique_ptr", "void*", "A global pointer"],
+    answer: 1,
+    explanation: "`unique_ptr` makes ownership explicit and releases automatically.",
+  },
+  {
+    type: "quiz",
+    question: "After `int* p = new int(9);`, what prevents a memory leak?",
+    options: ["cout << p", "delete p", "p + 1", "sizeof(p)"],
+    answer: 1,
+    explanation: "Raw memory obtained with `new` must be released with `delete`.",
+  },
+  {
+    type: "quiz",
+    question: "After `delete p;`, what is a good defensive assignment?",
+    options: ["p = nullptr", "p = &p", "p = new delete", "p = 1"],
+    answer: 0,
+    explanation: "Resetting to `nullptr` avoids leaving a dangling pointer value around.",
+  },
+  {
+    type: "quiz",
+    question: "When should you prefer a reference parameter over a pointer parameter?",
+    options: ["When null is meaningful", "When the argument is required", "When deleting memory", "When using arrays only"],
+    answer: 1,
+    explanation: "A reference communicates that a valid object is required.",
+  },
+  {
+    type: "quiz",
+    question: "Which type can point at a row of three ints in `int grid[2][3]`?",
+    options: ["int*", "int (*)[3]", "int**", "int[2]"],
+    answer: 1,
+    explanation: "`int (*)[3]` is a pointer to an array of three ints, which matches each row.",
+  },
+  {
+    type: "quiz",
+    question: "For `int grid[2][3]`, what does `grid + 1` point to?",
+    options: ["The next int", "The second row", "The third column", "Nothing"],
+    answer: 1,
+    explanation: "The array decays to a pointer to its first row, so adding one moves by one whole row.",
+  },
+  {
+    type: "quiz",
+    question: "Which expression reads row 1, column 2 from `grid`?",
+    options: ["*(*(grid + 1) + 2)", "*(grid + 3)", "&grid[1][2]", "grid * 12"],
+    answer: 0,
+    explanation: "First move to row 1, then move to column 2, then dereference.",
+  },
+  {
+    type: "quiz",
+    question: "Why is `int**` not the same as `int grid[2][3]`?",
+    options: ["2D arrays have contiguous rows", "int** cannot be null", "int** is always faster", "They are identical"],
+    answer: 0,
+    explanation: "A real 2D array is contiguous row-major storage, while `int**` points to pointers.",
+  },
+  {
+    type: "quiz",
+    question: "What does row-major storage mean?",
+    options: ["Columns are stored first", "Rows are stored one after another", "Every value is on the heap", "Pointers are forbidden"],
+    answer: 1,
+    explanation: "C++ stores a rectangular 2D array row by row in memory.",
+  },
+  {
+    type: "quiz",
+    question: "Which function parameter preserves the column count for a 2D array?",
+    options: ["int grid[][]", "int grid[][3]", "int** grid[3]", "int grid"],
+    answer: 1,
+    explanation: "All dimensions except the first must be known for pointer arithmetic.",
+  },
+  {
+    type: "quiz",
+    question: "What is a function pointer?",
+    options: ["A pointer that stores a callable function address", "A function that deletes memory", "A pointer to every function", "A reference to an array"],
+    answer: 0,
+    explanation: "A function pointer stores the address of a function with a matching signature.",
+  },
+  {
+    type: "quiz",
+    question: "For `int (*fn)(int)`, what can `fn` point to?",
+    options: ["A function taking int and returning int", "Any variable", "Only main", "A string"],
+    answer: 0,
+    explanation: "The parameter and return types must match the function pointer type.",
+  },
+  {
+    type: "quiz",
+    question: "Which operation changes the original value through a pointer?",
+    options: ["p = &x", "*p = 42", "cout << p", "p == nullptr"],
+    answer: 1,
+    explanation: "`*p = 42` writes into the object that `p` points at.",
+  },
+  {
+    type: "quiz",
+    question: "What does `const int* p` mean?",
+    options: ["The int cannot be changed through p", "p cannot be reseated", "p must be null", "p owns memory"],
+    answer: 0,
+    explanation: "`const int*` is a pointer to const int; the pointed value is read-only through p.",
+  },
+  {
+    type: "quiz",
+    question: "What does `int* const p = &x` mean?",
+    options: ["p cannot be reseated", "x cannot change", "p must point to heap memory", "p is a function"],
+    answer: 0,
+    explanation: "The pointer itself is const, so it keeps the same address after initialization.",
+  },
+  {
+    type: "quiz",
+    question: "Which smart pointer allows shared ownership?",
+    options: ["unique_ptr", "shared_ptr", "weak_ptr only", "nullptr"],
+    answer: 1,
+    explanation: "`shared_ptr` uses reference counting for shared ownership.",
+  },
+  {
+    type: "quiz",
+    question: "What is a dangling pointer?",
+    options: ["A pointer to released or dead storage", "A pointer to nullptr", "A pointer to a function", "A pointer inside a loop"],
+    answer: 0,
+    explanation: "Dangling pointers still hold an address, but the object there is no longer valid.",
+  },
+  {
+    type: "quiz",
+    question: "Which is best for optional non-owning access?",
+    options: ["Raw pointer with nullptr checks", "Raw new everywhere", "delete before use", "Global reference"],
+    answer: 0,
+    explanation: "A raw pointer can clearly express optional non-owning access when checked safely.",
+  },
+  {
+    type: "quiz",
+    question: "What does `make_unique<int>(77)` return?",
+    options: ["unique_ptr<int>", "int*", "int&", "shared_ptr<int*>"],
+    answer: 0,
+    explanation: "`make_unique<int>` constructs an int and returns a `unique_ptr<int>` that owns it.",
+  },
+  {
+    type: "quiz",
+    question: "Which expression prints the value owned by `unique_ptr<int> p`?",
+    options: ["cout << *p", "cout << &p", "cout << delete p", "cout << p[2][2]"],
+    answer: 0,
+    explanation: "Smart pointers overload `*`, so `*p` accesses the owned object.",
+  },
+  {
+    type: "quiz",
+    question: "What is the biggest risk of pointer arithmetic?",
+    options: ["Moving outside the valid range", "Using too many comments", "Printing numbers", "Calling a function"],
+    answer: 0,
+    explanation: "Pointer arithmetic is only safe within the same array object and its one-past position.",
+  },
+  {
+    type: "quiz",
+    question: "Which delete form matches `new int[5]`?",
+    options: ["delete p", "delete[] p", "free(p)", "p = nullptr only"],
+    answer: 1,
+    explanation: "Arrays allocated with `new[]` must be released with `delete[]`.",
+  },
+  {
+    type: "quiz",
+    question: "Which approach is usually better than manual `new[]` for a growable list?",
+    options: ["std::vector", "int** always", "void*", "Pointer arithmetic only"],
+    answer: 0,
+    explanation: "`std::vector` owns and resizes storage safely.",
+  },
+  {
+    type: "quiz",
+    question: "What is the best final pointer habit?",
+    options: ["Know who owns the object before using the pointer", "Delete every address", "Never check null", "Use int** for everything"],
+    answer: 0,
+    explanation: "Ownership and lifetime are the heart of safe pointer code.",
+  },
+];
+
 export const POINTER_CHAPTERS = [
   {
     id: "foundations",
@@ -579,6 +792,217 @@ int main() {
     ],
   },
   {
+    id: "multidimensional",
+    title: "2D Arrays and Row Pointers",
+    icon: "▦",
+    color: "#22d3ee",
+    lessons: [
+      {
+        id: "ptr-2d-1",
+        title: "2D Arrays Are Rows in Memory",
+        xp: 25,
+        theory: [
+          {
+            type: "text",
+            content:
+              "A C++ 2D array like `int grid[2][3]` is stored as rows laid out one after another. When used in expressions, `grid` behaves like a pointer to its first row, not like an `int**`.",
+          },
+          {
+            type: "callout",
+            variant: "info",
+            content:
+              "For `int grid[2][3]`, the row type is `int[3]`. A pointer to a row is written `int (*row)[3]`.",
+          },
+          {
+            type: "diagram",
+            title: "Row-major layout",
+            nodes: [
+              {
+                id: "row0",
+                label: "grid[0]",
+                color: "#00d4ff",
+                items: ["1, 2, 3", "`grid` points at this row"],
+              },
+              {
+                id: "row1",
+                label: "grid[1]",
+                color: "#b8ff00",
+                items: ["4, 5, 6", "`grid + 1` points at this row"],
+              },
+              {
+                id: "cell",
+                label: "grid[1][2]",
+                color: "#f59e0b",
+                items: ["Same as `*(*(grid + 1) + 2)`"],
+              },
+            ],
+          },
+          {
+            type: "code",
+            lang: "cpp",
+            label: "Point at a row",
+            content: `#include <iostream>
+using namespace std;
+
+int main() {
+    int grid[2][3] = {
+        {1, 2, 3},
+        {4, 5, 6}
+    };
+
+    int (*row)[3] = grid;
+
+    cout << row[1][2] << endl;
+    cout << *(*(grid + 1) + 2) << endl;
+    return 0;
+}`,
+          },
+          {
+            type: "quiz",
+            question: "For `int grid[2][3]`, what type should a row pointer use?",
+            options: ["int*", "int**", "int (*row)[3]", "int&"],
+            answer: 2,
+            explanation:
+              "Each row has three ints, so the row pointer must know that column count: `int (*row)[3]`.",
+          },
+        ],
+        challenge: {
+          title: "Read a Cell With a Row Pointer",
+          description:
+            "Create `int grid[2][3] = {{1, 2, 3}, {4, 5, 6}}`, create `int (*row)[3] = grid`, then print `row[1][2]`.",
+          starterCode: `#include <iostream>
+using namespace std;
+
+int main() {
+    // TODO: create grid, create row pointer, print row[1][2]
+    return 0;
+}`,
+          solutionCode: `#include <iostream>
+using namespace std;
+
+int main() {
+    int grid[2][3] = {{1, 2, 3}, {4, 5, 6}};
+    int (*row)[3] = grid;
+    cout << row[1][2] << endl;
+    return 0;
+}`,
+          tests: [
+            { id: 1, label: "2D grid is declared", keywords: ["grid[2][3]"] },
+            { id: 2, label: "Row pointer keeps column count", keywords: ["(*row)[3]"] },
+            { id: 3, label: "Row pointer starts at grid", keywords: ["= grid"] },
+            { id: 4, label: "Cell row[1][2] is printed", keywords: ["cout", "row[1][2]"] },
+          ],
+        },
+      },
+      {
+        id: "ptr-2d-2",
+        title: "Passing 2D Arrays to Functions",
+        xp: 25,
+        theory: [
+          {
+            type: "text",
+            content:
+              "When a function receives a 2D array, C++ must know the column count. That lets pointer arithmetic jump from one row to the next correctly.",
+          },
+          {
+            type: "callout",
+            variant: "tip",
+            content:
+              "`void print(int grid[][3], int rows)` and `void print(int (*grid)[3], int rows)` mean the same parameter type.",
+          },
+          {
+            type: "stepthrough",
+            title: "Trace a 2D parameter",
+            steps: [
+              {
+                label: "Declare the shape",
+                code: "void print(int grid[][3], int rows)",
+                desc: "The function can accept any row count, but each row must have three columns.",
+              },
+              {
+                label: "Loop rows",
+                code: "for (int r = 0; r < rows; r++)",
+                desc: "Each row step moves by three ints.",
+              },
+              {
+                label: "Loop columns",
+                code: "cout << grid[r][c];",
+                desc: "Inside a row, normal column indexing works.",
+              },
+            ],
+          },
+          {
+            type: "code",
+            lang: "cpp",
+            label: "Print a matrix",
+            content: `#include <iostream>
+using namespace std;
+
+void printGrid(int grid[][3], int rows) {
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < 3; c++) {
+            cout << grid[r][c] << " ";
+        }
+        cout << endl;
+    }
+}`,
+          },
+          {
+            type: "quiz",
+            question: "Why must `grid[][3]` include the `3`?",
+            options: [
+              "So C++ can calculate where each row starts",
+              "So C++ can delete the array",
+              "So the function becomes recursive",
+              "So rows must always be three",
+            ],
+            answer: 0,
+            explanation:
+              "The column count is needed to compute row offsets in contiguous memory.",
+          },
+        ],
+        challenge: {
+          title: "Print a 2D Array Function",
+          description:
+            "Write `printGrid(int grid[][3], int rows)` that prints every value. In main, create a 2x3 grid and call `printGrid(grid, 2)`.",
+          starterCode: `#include <iostream>
+using namespace std;
+
+// TODO: write printGrid
+
+int main() {
+    int grid[2][3] = {{10, 20, 30}, {40, 50, 60}};
+    // TODO: call printGrid
+    return 0;
+}`,
+          solutionCode: `#include <iostream>
+using namespace std;
+
+void printGrid(int grid[][3], int rows) {
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < 3; c++) {
+            cout << grid[r][c] << " ";
+        }
+        cout << endl;
+    }
+}
+
+int main() {
+    int grid[2][3] = {{10, 20, 30}, {40, 50, 60}};
+    printGrid(grid, 2);
+    return 0;
+}`,
+          tests: [
+            { id: 1, label: "Function accepts grid[][3]", keywords: ["grid[][3]"] },
+            { id: 2, label: "Rows are looped", keywords: ["for", "rows"] },
+            { id: 3, label: "Columns are looped", keywords: ["for", "c < 3"] },
+            { id: 4, label: "printGrid is called", keywords: ["printGrid(grid, 2)"] },
+          ],
+        },
+      },
+    ],
+  },
+  {
     id: "advanced",
     title: "Advanced Pointer Patterns",
     icon: "λ",
@@ -747,6 +1171,70 @@ int main() {
             { id: 2, label: "nullptr is checked", keywords: ["nullptr"] },
             { id: 3, label: "Pointer is dereferenced safely", keywords: ["*p"] },
             { id: 4, label: "Address of n is passed", keywords: ["&n"] },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: "completion",
+    title: "Pointer Completion Test",
+    icon: "✓",
+    color: "#b8ff00",
+    lessons: [
+      {
+        id: "ptr-final-1",
+        title: "Final Pointer Mastery Check",
+        xp: 50,
+        theory: [
+          {
+            type: "text",
+            content:
+              "This completion test reviews the full pointer track: addresses, dereferencing, null safety, arrays, 2D arrays, ownership, smart pointers, and function pointers.",
+          },
+          {
+            type: "callout",
+            variant: "tip",
+            content:
+              "Answer each question by tracing the address, the value at that address, and who owns the memory. If those three are clear, most pointer code becomes predictable.",
+          },
+          ...FINAL_POINTER_QUESTIONS,
+        ],
+        challenge: {
+          title: "Pointer Final Audit",
+          description:
+            "Write `printCell(int grid[][3], int rows, int row, int col)`. It should check row and column bounds, then print the selected cell. In main, create a 2x3 grid and print row 1, column 2.",
+          starterCode: `#include <iostream>
+using namespace std;
+
+// TODO: write printCell
+
+int main() {
+    int grid[2][3] = {{1, 2, 3}, {4, 5, 6}};
+    // TODO: call printCell for row 1, column 2
+    return 0;
+}`,
+          solutionCode: `#include <iostream>
+using namespace std;
+
+void printCell(int grid[][3], int rows, int row, int col) {
+    if (row < 0 || row >= rows || col < 0 || col >= 3) {
+        cout << "invalid" << endl;
+        return;
+    }
+    cout << grid[row][col] << endl;
+}
+
+int main() {
+    int grid[2][3] = {{1, 2, 3}, {4, 5, 6}};
+    printCell(grid, 2, 1, 2);
+    return 0;
+}`,
+          tests: [
+            { id: 1, label: "Function accepts a 2D array", keywords: ["grid[][3]"] },
+            { id: 2, label: "Row bounds are checked", keywords: ["row", "rows"] },
+            { id: 3, label: "Column bounds are checked", keywords: ["col", "3"] },
+            { id: 4, label: "Selected cell is printed", keywords: ["cout", "grid[row][col]"] },
           ],
         },
       },
