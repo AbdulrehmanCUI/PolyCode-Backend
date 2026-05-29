@@ -14,6 +14,7 @@ import {
   Check,
   X,
 } from "lucide-react";
+import { getApiBase } from "../config/apiBase";
 import "./DailyChallenges.css";
 
 export default function DailyChallenge({ theme }) {
@@ -25,7 +26,7 @@ export default function DailyChallenge({ theme }) {
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_API_URL}/challenges/today`)
+    fetch(`${getApiBase()}/challenges/today`)
       .then((r) => r.json())
       .then((data) => {
         if (data && !data.message) {
@@ -53,7 +54,7 @@ export default function DailyChallenge({ theme }) {
 
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/challenges/${challenge._id}/submit`,
+        `${getApiBase()}/challenges/${challenge._id}/submit`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

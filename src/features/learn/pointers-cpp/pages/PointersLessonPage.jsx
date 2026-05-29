@@ -328,6 +328,7 @@ export default function PointersLessonPage() {
                   key={index}
                   block={block}
                   accentColor={lesson.chapterColor}
+                  runnableCodeLangs={["cpp", "c++"]}
                 />
               ))}
 

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import RunnableCodeBlock from "../../shared/RunnableCodeBlock";
 
 // Minimal markdown bold + inline code renderer
 function InlineText({ text }) {
@@ -56,7 +57,11 @@ function CodeSnippet({ code, language = "cpp" }) {
   );
 }
 
-export default function ConceptCard({ block, accentColor }) {
+export default function ConceptCard({
+  block,
+  accentColor,
+  runnableCodeLangs = [],
+}) {
   const [copied, setCopied] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
@@ -99,6 +104,17 @@ export default function ConceptCard({ block, accentColor }) {
 
   // ── Code block ───────────────────────────────────────────
   if (block.type === "code") {
+    const lang = (block.lang || "cpp").toLowerCase();
+    if (runnableCodeLangs.map((l) => l.toLowerCase()).includes(lang)) {
+      return (
+        <RunnableCodeBlock
+          block={block}
+          accentColor={accentColor}
+          language={lang}
+        />
+      );
+    }
+
     return (
       <div className="oops-code-block">
         {block.label && (

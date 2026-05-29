@@ -348,6 +348,7 @@ export default function LessonPage() {
                   key={i}
                   block={block}
                   accentColor={lesson.chapterColor}
+                  runnableCodeLangs={["cpp", "c++"]}
                 />
               ))}
               <div className="oops-notes-panel">
