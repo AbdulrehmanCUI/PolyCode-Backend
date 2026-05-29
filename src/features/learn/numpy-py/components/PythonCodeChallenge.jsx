@@ -2,17 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { useAuth } from "../../../auth/context/AuthContext";
-import { executeCode } from "../../../playground/services/BrowserExecutor";
 import {
   definePolycodeMonacoTheme,
   getVSCodeEditorOptions,
   POLYCODE_VSCODE_THEME,
 } from "../../../../shared/utils/monacoTheme";
-
-const apiBase = (process.env.REACT_APP_API_URL || "http://localhost:5000/api").replace(
-  /\/$/,
-  "",
-);
+import {
+  formatPythonOutput,
+  getPythonRuntimeError,
+  runPythonCode,
+} from "../../shared/runPython";
 
 function normalizeWhitespace(value = "") {
   return value.replace(/\s+/g, "");
@@ -61,60 +60,6 @@ function extractKeywords(solutionCode, testId, tests) {
       return [{ pattern: "print\\s*\\(" }];
     default:
       return lines[testId - 1] ? [lines[testId - 1]] : [];
-  }
-}
-
-async function runPythonOnServer(source) {
-  const endpoints = ["/challenges/run-python", "/documents/run-python"];
-  let lastError = null;
-
-  for (const path of endpoints) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 45000);
-
-    try {
-      const response = await fetch(`${apiBase}${path}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: source }),
-        signal: controller.signal,
-      });
-
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        lastError = new Error(
-          payload.message || payload.error || `Python API failed (${path})`,
-        );
-        continue;
-      }
-      return payload;
-    } catch (error) {
-      lastError = error;
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  throw lastError || new Error("Python API unavailable");
-}
-
-async function runPythonInBrowser(source) {
-  return executeCode(source, "python");
-}
-
-async function runPythonCode(source) {
-  try {
-    return { result: await runPythonOnServer(source), runtime: "server" };
-  } catch (serverError) {
-    try {
-      return { result: await runPythonInBrowser(source), runtime: "browser" };
-    } catch (browserError) {
-      throw new Error(
-        serverError.message ||
-          browserError.message ||
-          "Could not run Python. Start the backend or check your network for Pyodide.",
-      );
-    }
   }
 }
 
@@ -169,7 +114,7 @@ export default function PythonCodeChallenge({
       let expectedOutput = "";
       try {
         const expectedRun = await runPythonCode(challenge.solutionCode);
-        expectedOutput = formatOutput(expectedRun.result);
+        expectedOutput = formatPythonOutput(expectedRun.result);
       } catch {
         expectedOutput = "";
       }
@@ -200,13 +145,9 @@ export default function PythonCodeChallenge({
       }
 
       const { result: runResult, runtime } = runPayload;
-      const runtimeError =
-        runResult?.error ||
-        (runResult?.exitCode != null && runResult.exitCode !== 0
-          ? runResult.stderr || "Python exited with an error"
-          : "");
+      const runtimeError = getPythonRuntimeError(runResult);
 
-      const stdout = formatOutput(runResult);
+      const stdout = formatPythonOutput(runResult);
 
       if (runtimeError) {
         setResults({
@@ -427,8 +368,4 @@ export default function PythonCodeChallenge({
       </div>
     </div>
   );
-}
-
-function formatOutput(result = {}) {
-  return [result.stdout, result.stderr].filter(Boolean).join("\n").trim();
 }

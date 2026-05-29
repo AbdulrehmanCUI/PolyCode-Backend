@@ -1,8 +1,4 @@
-const API = (
-  process.env.REACT_APP_API_URL || "http://localhost:5000/api"
-)
-  .trim()
-  .replace(/\/$/, "");
+import { getApiBase } from "../../../config/apiBase";
 
 export function extractGoogleDriveFileId(value = "") {
   if (!value) return null;
@@ -27,7 +23,7 @@ export function getProfilePictureSrc(user, previewUrl = null) {
     extractGoogleDriveFileId(user.profilePicture);
 
   if (userId && driveId) {
-    return `${API}/auth/user/${userId}/avatar`;
+    return `${getApiBase()}/auth/user/${userId}/avatar`;
   }
 
   if (driveId) {

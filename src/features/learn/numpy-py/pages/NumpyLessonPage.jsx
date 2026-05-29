@@ -310,6 +310,7 @@ export default function NumpyLessonPage() {
                   key={index}
                   block={block}
                   accentColor={lesson.chapterColor}
+                  runnableCodeLangs={["python"]}
                 />
               ))}
 

@@ -5,14 +5,16 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
+import { getApiBase } from "../../../config/apiBase";
 
 const AuthContext = createContext(null);
 
-const API = (
-  process.env.REACT_APP_API_URL || "http://localhost:5000/api"
-)
-  .trim()
-  .replace(/\/$/, "");
+function networkErrorMessage(error) {
+  if (error?.message === "Failed to fetch") {
+    return "Cannot reach the server. Check your internet connection or try again in a moment.";
+  }
+  return error?.message || "Request failed";
+}
 
 async function readApiResponse(res, fallbackMessage) {
   const text = await res.text();
@@ -46,7 +48,7 @@ export function AuthProvider({ children }) {
       return;
     }
     try {
-      const res = await fetch(`${API}/auth/me`, {
+      const res = await fetch(`${getApiBase()}/auth/me`, {
         headers: { Authorization: `Bearer ${storedToken}` },
       });
       if (res.ok) {
@@ -70,36 +72,44 @@ export function AuthProvider({ children }) {
   }, [fetchMe, token]);
 
   const login = useCallback(async (email, password) => {
-    const res = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await readApiResponse(res, "Login failed");
-    localStorage.setItem("token", data.token);
-    setToken(data.token);
-    setUser(data.user);
-    return data.user;
-  }, []);
-
-  const register = useCallback(
-    async ({ email, username, password, firstName, lastName }) => {
-      const res = await fetch(`${API}/auth/register`, {
+    try {
+      const res = await fetch(`${getApiBase()}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          username,
-          password,
-          firstName,
-          lastName,
-        }),
+        body: JSON.stringify({ email, password }),
       });
-      const data = await readApiResponse(res, "Registration failed");
+      const data = await readApiResponse(res, "Login failed");
       localStorage.setItem("token", data.token);
       setToken(data.token);
       setUser(data.user);
       return data.user;
+    } catch (error) {
+      throw new Error(networkErrorMessage(error));
+    }
+  }, []);
+
+  const register = useCallback(
+    async ({ email, username, password, firstName, lastName }) => {
+      try {
+        const res = await fetch(`${getApiBase()}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            username,
+            password,
+            firstName,
+            lastName,
+          }),
+        });
+        const data = await readApiResponse(res, "Registration failed");
+        localStorage.setItem("token", data.token);
+        setToken(data.token);
+        setUser(data.user);
+        return data.user;
+      } catch (error) {
+        throw new Error(networkErrorMessage(error));
+      }
     },
     [],
   );

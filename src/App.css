@@ -4050,6 +4050,7 @@ body {
   padding: 3px 8px;
   display: inline-block;
   margin-bottom: 16px;
+  margin-left: 6px;
 }
 
 .oops-hero-title {
@@ -6062,6 +6063,92 @@ body {
   color: #ffffff;
   border-color: rgba(55, 148, 255, 0.42);
   background: rgba(55, 148, 255, 0.12);
+}
+
+.oops-code-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.oops-run-code-btn {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink, #03050a);
+  background: var(--accent, var(--acid, #b8ff00));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 6px;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.oops-run-code-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.oops-run-code-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.oops-code-block-runnable .oops-code-label {
+  flex-wrap: wrap;
+}
+
+.oops-theory-editor {
+  border-top: 1px solid rgba(55, 148, 255, 0.12);
+  min-height: 220px;
+}
+
+.oops-theory-editor .monaco-editor,
+.oops-theory-editor .monaco-editor-background {
+  background: #1e1e1e !important;
+}
+
+.oops-auth-gate-theory {
+  margin: 0;
+  border-top: 1px solid rgba(55, 148, 255, 0.14);
+  border-radius: 0;
+  padding: 12px 14px;
+}
+
+.oops-output-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.oops-clear-output-btn {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--txt-2, #6e7891);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.oops-clear-output-btn:hover {
+  color: var(--txt-1, #c0c8e0);
+  border-color: rgba(55, 148, 255, 0.35);
+}
+
+.oops-theory-output {
+  margin: 0;
+  border: none;
+  border-top: 1px solid rgba(55, 148, 255, 0.16);
+  border-radius: 0;
+}
+
+.oops-theory-output .oops-output-body {
+  min-height: 64px;
+  max-height: 160px;
 }
 
 .oops-pre {

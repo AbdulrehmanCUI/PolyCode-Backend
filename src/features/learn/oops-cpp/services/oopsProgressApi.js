@@ -1,9 +1,7 @@
-const API = (process.env.REACT_APP_API_URL || "http://localhost:5000/api")
-  .trim()
-  .replace(/\/$/, "");
+import { getApiBase } from "../../../../config/apiBase";
 
 async function request(path, token, options = {}) {
-  const res = await fetch(`${API}/auth/learn/oops-cpp/progress${path}`, {
+  const res = await fetch(`${getApiBase()}/auth/learn/oops-cpp/progress${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",

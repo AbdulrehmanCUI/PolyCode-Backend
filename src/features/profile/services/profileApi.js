@@ -1,8 +1,4 @@
-const API = (
-  process.env.REACT_APP_API_URL || "http://localhost:5000/api"
-)
-  .trim()
-  .replace(/\/$/, "");
+import { getApiBase } from "../../../config/apiBase";
 
 async function readResponse(res, fallbackMessage) {
   const text = await res.text();
@@ -21,7 +17,7 @@ async function readResponse(res, fallbackMessage) {
 }
 
 export async function updateProfile(token, userId, payload) {
-  const res = await fetch(`${API}/auth/user/${userId}`, {
+  const res = await fetch(`${getApiBase()}/auth/user/${userId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -33,7 +29,7 @@ export async function updateProfile(token, userId, payload) {
 }
 
 export async function uploadProfileAvatar(token, userId, imageBase64) {
-  const res = await fetch(`${API}/auth/user/${userId}/avatar`, {
+  const res = await fetch(`${getApiBase()}/auth/user/${userId}/avatar`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

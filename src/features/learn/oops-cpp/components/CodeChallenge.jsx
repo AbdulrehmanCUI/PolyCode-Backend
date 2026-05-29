@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import Editor from "@monaco-editor/react";
+import { useAuth } from "../../../auth/context/AuthContext";
+import { getApiBase } from "../../../../config/apiBase";
 import {
   definePolycodeMonacoTheme,
   getVSCodeEditorOptions,
@@ -14,6 +17,9 @@ export default function CodeChallenge({
   initialCode,
   onCodeChange,
 }) {
+  const { loading: authLoading, isAuthenticated } = useAuth();
+  const canRun = isAuthenticated && !authLoading;
+
   const [code, setCode] = useState(initialCode || challenge.starterCode);
   const [results, setResults] = useState(null); // null | { passed, tests }
   const [output, setOutput] = useState(null);
@@ -25,9 +31,6 @@ export default function CodeChallenge({
   const monacoRef = useRef(null);
   const fixedSelectionDecorationRef = useRef([]);
   const fixedSelectionRangeRef = useRef(null);
-  const apiBase = (process.env.REACT_APP_API_URL || "http://localhost:5000/api")
-    .replace(/\/$/, "");
-
   useEffect(() => {
     const challengeChanged = activeChallengeId.current !== challenge.id;
 
@@ -52,7 +55,7 @@ export default function CodeChallenge({
   // challenge-specific acceptance checks. The local diagnostics keep broken
   // C++ from passing silently if the compiler API is down.
   function runTests() {
-    if (running || showSolution) return;
+    if (!canRun || running || showSolution) return;
 
     setRunning(true);
     setResults(null);
@@ -196,7 +199,7 @@ export default function CodeChallenge({
     monacoRef.current = monaco;
 
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-      runTestsRef.current?.();
+      if (canRun) runTestsRef.current?.();
     });
 
     editor.onContextMenu((event) => {
@@ -304,7 +307,7 @@ export default function CodeChallenge({
     const timeout = setTimeout(() => controller.abort(), 12000);
 
     try {
-      const response = await fetch(`${apiBase}/challenges/run-cpp`, {
+      const response = await fetch(`${getApiBase()}/challenges/run-cpp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: source }),
@@ -1104,7 +1107,7 @@ export default function CodeChallenge({
       <div className="oops-problem-panel">
         <div className="oops-problem-header">
           <h3 className="oops-problem-title">{challenge.title}</h3>
-          {isCompleted && (
+          {canRun && isCompleted && (
             <span
               className="oops-problem-solved"
               style={{ color: accentColor }}
@@ -1114,6 +1117,26 @@ export default function CodeChallenge({
           )}
         </div>
         <p className="oops-problem-desc">{challenge.description}</p>
+
+        {!canRun && (
+          <div className="oops-auth-gate">
+            <p>
+              You can write code in the editor. Sign in or create an account to
+              run, submit, save progress, and mark lessons complete.
+            </p>
+            <div className="oops-auth-gate-actions">
+              <Link to="/login" className="oops-auth-gate-btn">
+                Sign in
+              </Link>
+              <Link
+                to="/signup"
+                className="oops-auth-gate-btn oops-auth-gate-btn-primary"
+              >
+                Sign up
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Test cases */}
         <div className="oops-test-cases">
@@ -1170,8 +1193,10 @@ export default function CodeChallenge({
               ↺ Reset
             </button>
             <button
+              type="button"
               className="oops-editor-action"
               onClick={() => setShowSolution(!showSolution)}
+              disabled={!canRun}
             >
               {showSolution ? "Hide Solution" : "💡 Solution"}
             </button>
@@ -1190,7 +1215,7 @@ export default function CodeChallenge({
               if (!showSolution) {
                 const nextCode = value || "";
                 setCode(nextCode);
-                onCodeChange?.(nextCode);
+                if (isAuthenticated) onCodeChange?.(nextCode);
               }
             }}
             options={getVSCodeEditorOptions({
@@ -1212,15 +1237,23 @@ export default function CodeChallenge({
             </div>
           )}
           <button
+            type="button"
             className="oops-run-btn"
             style={{ "--accent": accentColor }}
             onClick={runTests}
-            disabled={running || showSolution}
+            disabled={!canRun || running || showSolution}
+            title={
+              !canRun ? "Sign in or sign up to run and submit" : undefined
+            }
           >
-            {running ? (
+            {authLoading ? (
+              <span className="oops-run-spinner">Checking sign-in…</span>
+            ) : running ? (
               <span className="oops-run-spinner">⟳ Running…</span>
-            ) : (
+            ) : canRun ? (
               "▶ Run & Submit"
+            ) : (
+              "Sign in to run & submit"
             )}
           </button>
         </div>
