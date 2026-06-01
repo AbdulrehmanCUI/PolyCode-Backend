@@ -957,47 +957,85 @@ print(m)`,
           {
             type: "text",
             content:
-              "Picture a **pizza cut into a grid**: rows and columns. NumPy slicing works like Python lists — `a[start:stop:step]` — but 2D arrays use `a[row, col]`. Grab a whole row with `a[1, :]` or a whole column with `a[:, 0]`.",
+              "Once you have an array, you rarely need **every** number at once. **Indexing and slicing** let you grab one value, a row, a column, or a piece of a list — just like cutting a slice from a longer list in plain Python.",
+            code: {
+              lang: "python",
+              label: "1D slice — same idea as a Python list",
+              content: `import numpy as np
+
+temps = np.array([68, 72, 75, 80, 65])
+print(temps[0])      # first day → 68
+print(temps[1:4])    # middle days → [72 75 80]
+print(temps[-1])     # last day → 65`,
+            },
+          },
+          {
+            type: "text",
+            content:
+              "A **2D array** is a table (rows and columns). Use **`array[row, col]`** for one cell. Use **`array[row, :]`** for a full row and **`array[:, col]`** for a full column. The **`:`** means \"all\" along that side.",
+            code: {
+              lang: "python",
+              label: "Pick a cell, a row, or a column",
+              content: `import numpy as np
+
+grid = np.array([[10, 20, 30],
+                 [40, 50, 60],
+                 [70, 80, 90]])
+
+print(grid[1, 2])    # row 1, col 2 → 60
+print(grid[1, :])    # whole middle row → [40 50 60]
+print(grid[:, 0])    # first column → [10 40 70]`,
+            },
           },
           {
             type: "diagram",
-            title: "2D indexing",
+            title: "2D indexing cheat sheet",
             nodes: [
               {
                 id: "cell",
-                label: "Single cell",
+                label: "One cell",
                 color: "#8b5cf6",
-                items: ["m[1, 2]", "row 1, col 2"],
+                items: ["grid[1, 2]", "row 1, column 2"],
               },
               {
                 id: "row",
                 label: "Whole row",
                 color: "#6366f1",
-                items: ["m[1, :]", "m[1]"],
+                items: ["grid[1, :]", "or grid[1]"],
               },
               {
                 id: "col",
                 label: "Whole column",
                 color: "#4f46e5",
-                items: ["m[:, 0]", "all rows, col 0"],
+                items: ["grid[:, 0]", "every row, column 0"],
               },
             ],
           },
           {
-            type: "code",
-            lang: "python",
-            label: "Slice rows and columns",
-            content: `import numpy as np
+            type: "text",
+            content:
+              "**Negative indices** count from the end — `-1` is the last row or last item. Handy when you do not want to count how long the array is.",
+            code: {
+              lang: "python",
+              label: "Last row without knowing the size",
+              content: `import numpy as np
 
-m = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
-print(m[1, :])   # middle row → [4 5 6]
-print(m[:, 0])   # first column → [1 4 7]`,
+grid = np.array([[1, 2], [3, 4], [5, 6]])
+print(grid[-1])      # last row → [5 6]
+print(grid[-1, 0])   # last row, first col → 5`,
+            },
+          },
+          {
+            type: "callout",
+            variant: "info",
+            content:
+              "Slicing uses **`start:stop`** — the **stop index is left out**, just like Python lists. `temps[0:3]` gives indices 0, 1, 2.",
           },
           {
             type: "callout",
             variant: "tip",
             content:
-              "Negative indices work too! `m[-1]` is the last row, just like Python lists.",
+              "For 2D arrays, always think **row first, then column**: `grid[row, col]`.",
           },
           {
             type: "quiz",
@@ -1043,46 +1081,95 @@ print(grid[1])`,
           {
             type: "text",
             content:
-              "A **boolean mask** is a True/False filter — like highlighting only high **game scores** in a spreadsheet. Write a condition (`scores > 90`) and use it inside brackets: `arr[arr > 0]`.",
-          },
-          {
-            type: "code",
-            lang: "python",
-            label: "Filter positives",
-            content: `import numpy as np
+              "**Slicing** picks items by **position** (first, second, row 1). A **boolean mask** picks items by a **rule** — like \"only scores above 90\" or \"only even numbers\". You write a True/False test, then put it inside brackets: **`arr[arr > 90]`**.",
+            code: {
+              lang: "python",
+              label: "Keep only values greater than 0",
+              content: `import numpy as np
 
 a = np.array([-1, 3, 0, 7, -2])
 positives = a[a > 0]
-print(positives)  # [3 7]`,
+print(positives)   # [3 7]`,
+            },
           },
           {
-            type: "code",
-            lang: "python",
-            label: "See the mask itself",
-            content: `import numpy as np
+            type: "text",
+            content:
+              "First NumPy builds a **mask** — an array of **True** and **False** (one per element). Then it returns only the values where the mask is **True**. The **original array does not change**.",
+            code: {
+              lang: "python",
+              label: "See the mask, then use it",
+              content: `import numpy as np
 
 scores = np.array([55, 92, 78, 100, 63])
 mask = scores >= 90
-print(mask)              # [False  True False  True False]
-print(scores[mask])      # [ 92 100]`,
+print(mask)           # [False  True False  True False]
+print(scores[mask])   # [ 92 100]`,
+            },
+          },
+          {
+            type: "diagram",
+            title: "Slice vs boolean mask",
+            nodes: [
+              {
+                id: "slice",
+                label: "Slicing",
+                color: "#6366f1",
+                items: [
+                  "By position: [1:4]",
+                  "Fixed rows or columns",
+                  "Example: grid[1, :]",
+                ],
+              },
+              {
+                id: "mask",
+                label: "Boolean mask",
+                color: "#8b5cf6",
+                items: [
+                  "By condition: arr > 90",
+                  "Keeps matching values only",
+                  "Example: scores[scores >= 60]",
+                ],
+              },
+            ],
+          },
+          {
+            type: "text",
+            content:
+              "You can combine rules with **`&`** (and), **`|`** (or), and **`~`** (not). Put each part in **parentheses** — for example, evens between 10 and 50.",
+            code: {
+              lang: "python",
+              label: "Even numbers only",
+              content: `import numpy as np
+
+nums = np.array([1, 2, 3, 4, 5, 6])
+evens = nums[nums % 2 == 0]
+print(evens)   # [2 4 6]`,
+            },
           },
           {
             type: "callout",
             variant: "info",
             content:
-              "Masks never change the original array — they return a **new selection**. The original stays untouched.",
+              "A mask **never edits** the original array. It returns a **new selection** you can print or use in the next step.",
+          },
+          {
+            type: "callout",
+            variant: "tip",
+            content:
+              "Read **`arr[arr > 5]`** as: \"give me every element in `arr` where the condition is True.\"",
           },
           {
             type: "quiz",
             question: "What does `arr[arr > 5]` return?",
             options: [
               "All elements greater than 5",
-              "A boolean array",
+              "A boolean array only",
               "The index of 5",
               "An error",
             ],
             answer: 0,
-            explanation: "The condition creates a mask; bracket indexing returns only elements where True.",
+            explanation: "The condition builds a mask; bracket indexing returns only elements where True.",
           },
         ],
         challenge: {
@@ -1121,38 +1208,84 @@ print(nums[nums % 2 == 0])`,
           {
             type: "text",
             content:
-              "**`np.where(condition, x, y)`** is an if/else for arrays: where True, pick from `x`; where False, pick from `y`. **Fancy indexing** uses a list of indices to grab specific positions — like picking players #2, #5, and #7 from a roster.",
-          },
-          {
-            type: "code",
-            lang: "python",
-            label: "np.where — replace values",
-            content: `import numpy as np
+              "Sometimes you do not only want to **filter** values — you want to **replace** them. **`np.where(condition, x, y)`** works like **if/else for the whole array**: where the condition is **True**, take from **`x`**; where **False**, take from **`y`**.",
+            code: {
+              lang: "python",
+              label: "Passing scores stay, failing scores become 0",
+              content: `import numpy as np
 
 scores = np.array([45, 88, 52, 95, 70])
-# Pass if score >= 60, else 'retry'
 result = np.where(scores >= 60, scores, 0)
-print(result)  # [ 0 88  0 95 70]`,
+print(result)   # [ 0 88  0 95 70]`,
+            },
           },
           {
-            type: "code",
-            lang: "python",
-            label: "Fancy indexing",
-            content: `import numpy as np
+            type: "text",
+            content:
+              "**Fancy indexing** means picking items by a **list of positions** — not a slice range. Like choosing player #0, #2, and #5 from a roster instead of \"players 0 through 2\".",
+            code: {
+              lang: "python",
+              label: "Pick specific days by index",
+              content: `import numpy as np
 
 temps = np.array([72, 68, 75, 80, 65, 90])
-pick = temps[[0, 2, 5]]   # Mon, Wed, Sat readings
-print(pick)  # [72 75 90]`,
+pick = temps[[0, 2, 5]]   # Mon, Wed, Sat
+print(pick)   # [72 75 90]`,
+            },
+          },
+          {
+            type: "diagram",
+            title: "Three ways to select data",
+            nodes: [
+              {
+                id: "slice",
+                label: "Slicing",
+                color: "#6366f1",
+                items: ["Continuous range", "arr[1:4]"],
+              },
+              {
+                id: "mask",
+                label: "Boolean mask",
+                color: "#8b5cf6",
+                items: ["By rule", "arr[arr > 60]"],
+              },
+              {
+                id: "where",
+                label: "np.where",
+                color: "#4f46e5",
+                items: ["Replace by rule", "np.where(cond, x, y)"],
+              },
+            ],
+          },
+          {
+            type: "text",
+            content:
+              "With **one argument**, **`np.where(condition)`** returns the **indices** where True — useful when you need positions, not just values.",
+            code: {
+              lang: "python",
+              label: "Find where scores passed",
+              content: `import numpy as np
+
+scores = np.array([45, 88, 52, 95, 70])
+passed_at = np.where(scores >= 60)
+print(passed_at)   # (array([1, 3, 4]),)  → indices 1, 3, 4`,
+            },
+          },
+          {
+            type: "callout",
+            variant: "info",
+            content:
+              "**Quick pick:** filter only → **`arr[condition]`**. replace values → **`np.where(cond, x, y)`**. pick exact positions → **`arr[[0, 2, 5]]`**.",
           },
           {
             type: "callout",
             variant: "tip",
             content:
-              "Call `np.where(condition)` with one argument to get **indices** where True — handy for finding positions.",
+              "`x` and `y` in `np.where` can be numbers or arrays the same shape as your data.",
           },
           {
             type: "quiz",
-            question: "What does np.where(arr > 0, arr, -1) do?",
+            question: "What does `np.where(arr > 0, arr, -1)` do?",
             options: [
               "Keeps positives, replaces others with -1",
               "Removes negative values",
@@ -1161,6 +1294,18 @@ print(pick)  # [72 75 90]`,
             ],
             answer: 0,
             explanation: "Three-argument where is element-wise: positive values stay, rest become -1.",
+          },
+          {
+            type: "quiz",
+            question: "You want readings on days 0, 2, and 4 from `temps`. Best approach?",
+            options: [
+              "temps[0:4]",
+              "temps[[0, 2, 4]]",
+              "temps > 0",
+              "np.where(temps)",
+            ],
+            answer: 1,
+            explanation: "Double brackets with a list of indices is fancy indexing.",
           },
         ],
         challenge: {
