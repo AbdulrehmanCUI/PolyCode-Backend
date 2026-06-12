@@ -1,6 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronRight, Minus, Sparkles, Trash2, Zap } from "lucide-react";
+import {
+  ChevronRight,
+  Minus,
+  Sparkles,
+  ThumbsDown,
+  ThumbsUp,
+  Trash2,
+  Zap,
+} from "lucide-react";
 import { useAssistant } from "../../assistant/context/AssistantContext";
 import {
   getContextLabel,
@@ -11,6 +19,7 @@ import {
   clearAssistantSession,
   fetchAssistantSession,
   postAssistantChat,
+  postAssistantFeedback,
 } from "../lib/assistantApi";
 import { ASSISTANT_CONFIG } from "../lib/assistantConfig";
 import { useTypewriter } from "../lib/useTypewriter";
@@ -93,11 +102,45 @@ function renderMarkdown(text) {
   });
 }
 
-function MentorReply({ msg, reduceMotion }) {
+function ReplyFeedback({ feedback, onRate, disabled }) {
+  return (
+    <div className="assistant-feedback">
+      <button
+        type="button"
+        className={`assistant-feedback-btn${feedback === "like" ? " assistant-feedback-btn--active-like" : ""}`}
+        onClick={() => onRate("like")}
+        disabled={disabled}
+        aria-label="Helpful reply"
+        aria-pressed={feedback === "like"}
+      >
+        <ThumbsUp size={14} />
+      </button>
+      <button
+        type="button"
+        className={`assistant-feedback-btn${feedback === "dislike" ? " assistant-feedback-btn--active-dislike" : ""}`}
+        onClick={() => onRate("dislike")}
+        disabled={disabled}
+        aria-label="Not helpful reply"
+        aria-pressed={feedback === "dislike"}
+      >
+        <ThumbsDown size={14} />
+      </button>
+    </div>
+  );
+}
+
+function MentorReply({
+  msg,
+  reduceMotion,
+  showFeedback,
+  onRate,
+  feedbackSaving,
+}) {
   const isNew = msg.id.startsWith("assistant-");
   const shouldStream = isNew && !reduceMotion;
   const { displayed, done } = useTypewriter(msg.content, shouldStream);
   const visible = shouldStream ? displayed : msg.content;
+  const canRate = showFeedback && done && msg.content && msg.id !== "welcome";
 
   return (
     <article style={{ position: "relative", paddingLeft: "1.25rem" }}>
@@ -123,17 +166,8 @@ function MentorReply({ msg, reduceMotion }) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
           <AssistantAvatar size="sm" />
-          <span
-            style={{
-              fontFamily: "ui-monospace, monospace",
-              fontSize: "10px",
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: "var(--acid)",
-            }}
-          >
-            mentor.output
+          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--acid)" }}>
+            {ASSISTANT_CONFIG.name}
           </span>
         </div>
         <p style={{ fontSize: "13px", lineHeight: 1.6, color: "#e2e8f0", margin: 0 }}>
@@ -152,6 +186,13 @@ function MentorReply({ msg, reduceMotion }) {
             />
           ) : null}
         </p>
+        {canRate ? (
+          <ReplyFeedback
+            feedback={msg.feedback}
+            onRate={onRate}
+            disabled={feedbackSaving}
+          />
+        ) : null}
       </div>
     </article>
   );
@@ -185,6 +226,7 @@ export default function AssistantFab() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
+  const [feedbackSavingId, setFeedbackSavingId] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const sessionRef = useRef(session);
@@ -203,9 +245,12 @@ export default function AssistantFab() {
         if (cancelled || !data?.messages?.length) return;
 
         const serverMessages = data.messages.map((m, index) => ({
-          id: `server-${index}-${m.createdAt || Date.now()}`,
+          id:
+            m.clientMessageId ||
+            `server-${index}-${m.createdAt || Date.now()}`,
           role: m.role,
           content: m.content,
+          feedback: m.feedback || null,
         }));
 
         setSession({
@@ -261,11 +306,55 @@ export default function AssistantFab() {
     clearAssistantSession(previousSessionId).catch(() => {});
   }, []);
 
+  const handleFeedback = useCallback(
+    async (messageId, rating, assistantContent) => {
+      const msgs = sessionRef.current.messages;
+      const msgIndex = msgs.findIndex((m) => m.id === messageId);
+      if (msgIndex < 0) return;
+
+      const userMsg = [...msgs.slice(0, msgIndex)]
+        .reverse()
+        .find((m) => m.role === "user" && m.content?.trim());
+      if (!userMsg) return;
+
+      const previousFeedback = msgs[msgIndex]?.feedback;
+      setSession((prev) => ({
+        ...prev,
+        messages: prev.messages.map((m) =>
+          m.id === messageId ? { ...m, feedback: rating } : m,
+        ),
+      }));
+      setFeedbackSavingId(messageId);
+
+      try {
+        await postAssistantFeedback({
+          session_id: sessionRef.current.sessionId,
+          message_id: messageId,
+          rating,
+          user_message: userMsg.content,
+          assistant_message: assistantContent,
+          context: assistantContext,
+        });
+      } catch {
+        setSession((prev) => ({
+          ...prev,
+          messages: prev.messages.map((m) =>
+            m.id === messageId ? { ...m, feedback: previousFeedback || null } : m,
+          ),
+        }));
+      } finally {
+        setFeedbackSavingId(null);
+      }
+    },
+    [assistantContext],
+  );
+
   const sendText = useCallback(
     async (text) => {
       if (!text.trim() || sending) return;
 
       const userMsg = { id: `user-${Date.now()}`, role: "user", content: text };
+      const assistantId = `assistant-${Date.now()}`;
       const pendingId = `pending-${Date.now()}`;
       const pendingMsg = { id: pendingId, role: "assistant", content: "" };
       setSession((prev) => ({
@@ -287,11 +376,13 @@ export default function AssistantFab() {
           history,
           session_id: currentSession.sessionId,
           context: assistantContext,
+          assistant_message_id: assistantId,
         });
         const assistantMsg = {
-          id: `assistant-${Date.now()}`,
+          id: assistantId,
           role: "assistant",
           content: res.response,
+          feedback: null,
         };
         setSession((prev) => ({
           ...prev,
@@ -433,9 +524,6 @@ export default function AssistantFab() {
                           padding: "0.75rem 1rem",
                         }}
                       >
-                        <p style={{ margin: "0 0 0.25rem", fontFamily: "ui-monospace, monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#64748b" }}>
-                          you.input
-                        </p>
                         <p style={{ margin: 0, fontSize: "13px", color: "#f1f5f9" }}>{messageContent(msg)}</p>
                       </div>
                     </div>
@@ -443,6 +531,11 @@ export default function AssistantFab() {
                     <MentorReply
                       msg={{ ...msg, content: messageContent(msg) }}
                       reduceMotion={reduceMotion}
+                      showFeedback
+                      feedbackSaving={feedbackSavingId === msg.id}
+                      onRate={(rating) =>
+                        handleFeedback(msg.id, rating, messageContent(msg))
+                      }
                     />
                   )}
                 </div>
