@@ -86,9 +86,11 @@ function normalizeOrigin(origin = "") { // normalizeOrigin is a function that no
   return origin.trim().replace(/\/$/, "");
 }
 
-const defaultAllowedOrigins = [ // defaultAllowedOrigins is an array of allowed origins
+const defaultAllowedOrigins = [
   "https://code.quantumlogicslimited.com",
   "https://www.code.quantumlogicslimited.com",
+  "https://quantumlogicslimited.com",
+  "https://www.quantumlogicslimited.com",
   "https://digital-logics-studio.vercel.app",
   "https://poly-code-frontend-iota.vercel.app",
   "http://localhost:3000",
@@ -134,9 +136,36 @@ const isAllowedOrigin = (origin) => {
   return false;
 };
 
-const corsOptions = { // corsOptions is an object that contains the options for the cors middleware
+const CORS_METHODS = "GET,POST,PUT,DELETE,PATCH,OPTIONS";
+const CORS_HEADERS = "Content-Type, Authorization, X-Requested-With";
+
+function applyCorsHeaders(req, res) {
+  const origin = req.headers.origin;
+  if (!origin || !isAllowedOrigin(origin)) return false;
+
+  const normalizedOrigin = normalizeOrigin(origin);
+  res.setHeader("Access-Control-Allow-Origin", normalizedOrigin);
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Vary", "Origin");
+  return true;
+}
+
+// Handle preflight and attach CORS headers before any other middleware.
+app.use((req, res, next) => {
+  applyCorsHeaders(req, res);
+
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Methods", CORS_METHODS);
+    res.setHeader("Access-Control-Allow-Headers", CORS_HEADERS);
+    res.setHeader("Access-Control-Max-Age", "86400");
+    return res.sendStatus(204);
+  }
+
+  return next();
+});
+
+const corsOptions = {
   origin(origin, callback) {
-    // Server-to-server tools (curl, health checks) omit Origin.
     if (!origin) return callback(null, true);
 
     if (isAllowedOrigin(origin)) {
@@ -144,7 +173,7 @@ const corsOptions = { // corsOptions is an object that contains the options for 
     }
 
     console.warn(`🚫 CORS blocked origin: ${origin}`);
-    return callback(new Error(`CORS: Origin ${origin} is not allowed`));
+    return callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -287,13 +316,27 @@ if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
   });
 }
 
+app.use((err, req, res, next) => {
+  applyCorsHeaders(req, res);
+  console.error("Unhandled error:", err?.message || err);
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  const status = err?.status || 500;
+  return res.status(status).json({
+    error: err?.message || "Internal server error",
+  });
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 
-// Vercel runs Express as a serverless function — export the app, do not call listen().
-if (process.env.VERCEL) {
-  module.exports = app;
-} else {
+module.exports = app;
+
+// Only bind a port when executed directly (`node server.js`), not on Vercel serverless.
+if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`🚀  Server:    http://localhost:${PORT}`);
     console.log(`📖  API Docs:  http://localhost:${PORT}/api-docs`);
