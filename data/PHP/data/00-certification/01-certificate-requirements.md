@@ -1,0 +1,32 @@
+# PolyCode PHP Certificate — Requirements
+
+Earn the **PolyCode PHP Developer Certificate** by completing this course and demonstrating practical skills.
+
+## Requirements
+
+### 1. Complete all modules
+
+| Module | Lessons |
+|--------|---------|
+| 01 Beginner | 10 |
+| 02 Intermediate | 6 |
+| 03 Advanced | 7 |
+| 04 Professional | 6 |
+| 05 Mastery | 4 |
+
+### 2. Hands-on projects
+
+Complete **at least 3 projects** across the course (console app, structured program, capstone).
+
+### 3. Final assessment
+
+- Score **70% or higher** on the [final assessment](02-final-assessment.md)
+- Review weak topics before retaking
+
+## How to submit
+
+Track progress in your PolyCode profile and complete the assessment when ready.
+
+---
+
+See the [course roadmap](00-roadmap.md) for the full lesson list.

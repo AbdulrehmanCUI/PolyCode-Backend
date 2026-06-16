@@ -3,6 +3,16 @@ const path = require("path");
 const { DATA_BASE_PATH } = require("../../../config/constants");
 const { scanDirectory, buildTree } = require("../../../services/fileService");
 const { getFromCache, setInCache, cache } = require("../../../utils/cache");
+const { resolveLanguagePaths } = require("../../../utils/languagePaths");
+
+async function getScanTargets(language) {
+  const { scanPath, relativeBase } = resolveLanguagePaths(language);
+  const exists = await fs
+    .access(scanPath)
+    .then(() => true)
+    .catch(() => false);
+  return exists ? { scanPath, relativeBase } : null;
+}
 
 /**
  * Get all documents with optional filters
@@ -26,17 +36,14 @@ async function getDocuments(filters = {}) {
   let finalDocs = getFromCache(cache.documents, language);
 
   if (!finalDocs) {
-    let scanPath =
-      language === "all" ? DATA_BASE_PATH : path.join(DATA_BASE_PATH, language);
+    const targets =
+      language === "all"
+        ? { scanPath: DATA_BASE_PATH, relativeBase: DATA_BASE_PATH }
+        : await getScanTargets(language);
     let allDocuments = [];
 
-    if (
-      await fs
-        .access(scanPath)
-        .then(() => true)
-        .catch(() => false)
-    ) {
-      allDocuments = await scanDirectory(scanPath, scanPath);
+    if (targets) {
+      allDocuments = await scanDirectory(targets.scanPath, targets.relativeBase);
     }
 
     const uniqueDocs = allDocuments.reduce((acc, doc) => {
@@ -157,13 +164,12 @@ async function getDocumentStats(language = "all") {
   let stats = getFromCache(cache.stats, language);
 
   if (!stats) {
-    let scanPath =
-      language === "all" ? DATA_BASE_PATH : path.join(DATA_BASE_PATH, language);
-    let docs = (await fs
-      .access(scanPath)
-      .then(() => true)
-      .catch(() => false))
-      ? await scanDirectory(scanPath, scanPath)
+    const targets =
+      language === "all"
+        ? { scanPath: DATA_BASE_PATH, relativeBase: DATA_BASE_PATH }
+        : await getScanTargets(language);
+    let docs = targets
+      ? await scanDirectory(targets.scanPath, targets.relativeBase)
       : [];
 
     const uniqueDocs = Array.from(
@@ -233,23 +239,14 @@ async function getDocumentTree(language = "all") {
   let tree = getFromCache(cache.trees, language);
 
   if (!tree) {
-    let scanPath =
-      language === "all" ? DATA_BASE_PATH : path.join(DATA_BASE_PATH, language);
-    if (
-      !(await fs
-        .access(scanPath)
-        .then(() => true)
-        .catch(() => false))
-    )
-      return [];
+    const targets =
+      language === "all"
+        ? { scanPath: DATA_BASE_PATH, relativeBase: DATA_BASE_PATH }
+        : await getScanTargets(language);
 
-    const rawTree = await buildTree(scanPath, scanPath);
-    tree = [];
-    for (const node of rawTree) {
-      if (node.type === "folder" && node.name.toLowerCase() === "data")
-        tree.push(...(node.children || []));
-      else tree.push(node);
-    }
+    if (!targets) return [];
+
+    tree = await buildTree(targets.scanPath, targets.relativeBase);
     tree.sort((a, b) =>
       a.type === b.type
         ? a.name.localeCompare(b.name)
@@ -271,13 +268,12 @@ async function getDocumentCategories(language = "all") {
   let categories = getFromCache(cache.documents, language + "_cats");
 
   if (!categories) {
-    let scanPath =
-      language === "all" ? DATA_BASE_PATH : path.join(DATA_BASE_PATH, language);
-    let docs = (await fs
-      .access(scanPath)
-      .then(() => true)
-      .catch(() => false))
-      ? await scanDirectory(scanPath, scanPath)
+    const targets =
+      language === "all"
+        ? { scanPath: DATA_BASE_PATH, relativeBase: DATA_BASE_PATH }
+        : await getScanTargets(language);
+    let docs = targets
+      ? await scanDirectory(targets.scanPath, targets.relativeBase)
       : [];
     categories = [...new Set(docs.map((d) => d.category))].sort();
     setInCache(cache.documents, language + "_cats", categories);

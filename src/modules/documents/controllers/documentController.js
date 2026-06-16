@@ -2,6 +2,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const { DATA_BASE_PATH } = require("../../../config/constants");
 const { getFileInfo, scanDirectory } = require("../../../services/fileService");
+const { resolveLanguagePaths } = require("../../../utils/languagePaths");
 const {
   getDocuments,
   getDocumentStats,
@@ -169,10 +170,9 @@ async function getDocument(req, res) {
     }
 
     const { language = "all" } = req.query;
-    const basePath =
-      language === "all" ? DATA_BASE_PATH : path.join(DATA_BASE_PATH, language);
+    const { relativeBase } = resolveLanguagePaths(language);
 
-    const fullPath = path.join(basePath, requestedPath);
+    const fullPath = path.join(relativeBase, requestedPath);
 
     // Security: prevent directory traversal
     if (!path.resolve(fullPath).startsWith(path.resolve(DATA_BASE_PATH))) {
@@ -188,11 +188,8 @@ async function getDocument(req, res) {
     }
 
     if (fileInfo.fileType === "markdown") {
-      const scanPath =
-        language === "all"
-          ? DATA_BASE_PATH
-          : path.join(DATA_BASE_PATH, language);
-      const allDocs = await scanDirectory(scanPath, scanPath);
+      const { scanPath, relativeBase } = resolveLanguagePaths(language);
+      const allDocs = await scanDirectory(scanPath, relativeBase);
       const codeDocs = allDocs.filter((d) => d.fileType !== "markdown");
       const k = fileInfo.title
         .toLowerCase()

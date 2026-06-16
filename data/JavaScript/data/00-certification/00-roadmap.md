@@ -39,6 +39,8 @@ Welcome to the **PolyCode JavaScript Certificate Course**. This is a structured 
 | 06 | [Functions basics](../01-beginner/06-functions-basics.md) | Beginner |
 | 07 | [Arrays](../01-beginner/07-arrays.md) | Beginner |
 | 08 | [Objects](../01-beginner/08-objects.md) | Beginner |
+| 09 | [Strings and template literals](../01-beginner/09-strings-and-template-literals.md) | Beginner |
+| 10 | [Debugging and DevTools](../01-beginner/10-debugging-and-devtools.md) | Beginner |
 
 **Checkpoint:** Build a simple grade calculator or to-do list in the browser console.
 
@@ -55,6 +57,8 @@ Welcome to the **PolyCode JavaScript Certificate Course**. This is a structured 
 | 03 | [Async programming](../02-intermediate/03-async-programming.md) | Intermediate |
 | 04 | [Error handling](../02-intermediate/04-error-handling.md) | Intermediate |
 | 05 | [Classes and OOP](../02-intermediate/05-classes-and-oop.md) | Intermediate |
+| 06 | [Fetch API](../02-intermediate/06-fetch-api.md) | Intermediate |
+| 07 | [JSON and REST APIs](../02-intermediate/07-json-and-apis.md) | Intermediate |
 
 **Checkpoint:** Build an interactive web page that fetches data from a public API.
 

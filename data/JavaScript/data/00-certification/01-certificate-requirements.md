@@ -14,8 +14,8 @@ Earn the **PolyCode JavaScript Developer Certificate** by completing this struct
 
 Study every lesson in order:
 
-- **Module 01 — Beginner** (8 lessons)
-- **Module 02 — Intermediate** (5 lessons)
+- **Module 01 — Beginner** (10 lessons)
+- **Module 02 — Intermediate** (7 lessons)
 - **Module 03 — Advanced** (7 lessons)
 - **Module 04 — Professional** (7 lessons)
 - **Module 05 — Mastery** (4 lessons)
