@@ -13,8 +13,8 @@ A structured, numbered learning path from **beginner to mastery** — designed f
 | Module | Folder | Level | Lessons |
 |--------|--------|-------|---------|
 | 00 | `00-certification` | Overview | Roadmap, requirements, exam |
-| 01 | `01-beginner` | Beginner | 8 lessons |
-| 02 | `02-intermediate` | Intermediate | 5 lessons |
+| 01 | `01-beginner` | Beginner | 10 lessons |
+| 02 | `02-intermediate` | Intermediate | 7 lessons |
 | 03 | `03-advanced` | Advanced | 7 lessons |
 | 04 | `04-professional` | Professional | 7 lessons |
 | 05 | `05-mastery` | Mastery | 4 lessons |

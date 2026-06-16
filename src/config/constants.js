@@ -31,6 +31,11 @@ const ALLOWED_EXTENSIONS = [
   ".php",
   ".rb",
   ".sql",
+  ".cs",
+  ".qs",
+  ".sa",
+  ".ps1",
+  ".bat",
   ".sh",
   ".bash",
 ];
@@ -54,6 +59,10 @@ const FILE_TYPE_MAP = {
   ".php": "php",
   ".rb": "ruby",
   ".cs": "csharp",
+  ".qs": "qsharp",
+  ".sa": "text",
+  ".ps1": "powershell",
+  ".bat": "batch",
   ".sql": "sql",
   ".sh": "shell",
   ".bash": "shell",
@@ -67,6 +76,7 @@ const IGNORE_DIRS = [
   ".git",
   "dist",
   "build",
+  "_archive",
 ];
 
 module.exports = {

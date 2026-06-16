@@ -61,8 +61,10 @@ async function getFileInfo(filePath, relativePath, options = {}) {
     let category = path.dirname(normalizedPath);
     if (category === ".") category = "general";
     category =
-      category.replace(/^data\//i, "").replace(/^data$/i, "general") ||
-      "general";
+      category
+        .replace(/^[^/]+\/data\//i, "")
+        .replace(/^data\//i, "")
+        .replace(/^data$/i, "general") || "general";
 
     const baseInfo = {
       title: path.basename(filePath, ext),
