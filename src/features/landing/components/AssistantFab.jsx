@@ -323,6 +323,7 @@ export default function AssistantFab() {
   const sessionRef = useRef(session);
   const dockRef = useRef(null);
   const dragStateRef = useRef(null);
+  const suppressDockClickRef = useRef(false);
   const [dockPosition, setDockPosition] = useState(() => loadDockPosition());
   const [draggingDock, setDraggingDock] = useState(false);
 
@@ -558,6 +559,7 @@ export default function AssistantFab() {
 
   const handleDockPointerDown = (event) => {
     if (event.button !== 0) return;
+    event.preventDefault();
 
     const rect = dockRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -572,6 +574,7 @@ export default function AssistantFab() {
       width: rect.width,
       height: rect.height,
     };
+    suppressDockClickRef.current = false;
 
     dockRef.current?.setPointerCapture?.(event.pointerId);
   };
@@ -588,6 +591,7 @@ export default function AssistantFab() {
 
     event.preventDefault();
     state.moved = true;
+    suppressDockClickRef.current = true;
     setDraggingDock(true);
 
     setDockPosition(
@@ -635,7 +639,14 @@ export default function AssistantFab() {
     setDraggingDock(false);
   };
 
-  const openFromDock = () => {
+  const openFromDock = (event) => {
+    if (suppressDockClickRef.current) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      suppressDockClickRef.current = false;
+      return;
+    }
+
     setOpen(true);
   };
 
@@ -877,11 +888,21 @@ export default function AssistantFab() {
       {!open ? (
         <motion.div
           ref={dockRef}
+          role="button"
+          tabIndex={0}
           className={`assistant-dock-btn polym_mentor-dock${draggingDock ? " assistant-dock-btn--dragging" : ""}`}
           onPointerDown={handleDockPointerDown}
           onPointerMove={handleDockPointerMove}
           onPointerUp={handleDockPointerUp}
           onPointerCancel={handleDockPointerCancel}
+          onClick={openFromDock}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              setOpen(true);
+            }
+          }}
+          aria-label={`Open ${ASSISTANT_CONFIG.name}`}
           initial={reduceMotion ? {} : { x: 40, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.5, type: "spring", stiffness: 260, damping: 24 }}
@@ -896,10 +917,8 @@ export default function AssistantFab() {
               : undefined
           }
         >
-          <button
-            type="button"
-            onClick={openFromDock}
-            aria-label={`Open ${ASSISTANT_CONFIG.name}`}
+          <div
+            aria-hidden="true"
             style={{
               display: "flex",
               alignItems: "center",
@@ -922,7 +941,7 @@ export default function AssistantFab() {
             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "0.5rem", background: "var(--acid-dim)", color: "var(--acid)" }}>
               <Sparkles size={16} />
             </span>
-          </button>
+          </div>
         </motion.div>
       ) : null}
     </>

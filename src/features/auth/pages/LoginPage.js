@@ -16,8 +16,8 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
-      navigate("/");
+      const user = await login(email, password);
+      navigate(user?.username ? `/@${user.username}` : "/hub");
     } catch (err) {
       setError(err.message);
     } finally {

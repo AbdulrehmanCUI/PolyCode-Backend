@@ -29,8 +29,8 @@ export default function SignupPage() {
     }
     setLoading(true);
     try {
-      await register(form);
-      navigate("/");
+      const user = await register(form);
+      navigate(user?.username ? `/@${user.username}` : "/hub");
     } catch (err) {
       setError(err.message);
     } finally {

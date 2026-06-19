@@ -6,6 +6,10 @@ import React, {
   useCallback,
 } from "react";
 import { getApiBase } from "../../../config/apiBase";
+import {
+  updateProfile as updateProfileApi,
+  uploadProfileAvatar,
+} from "../../profile/services/profileApi";
 
 const AuthContext = createContext(null);
 
@@ -14,6 +18,18 @@ function networkErrorMessage(error) {
     return "Cannot reach the server. Check your internet connection or try again in a moment.";
   }
   return error?.message || "Request failed";
+}
+
+function rememberSignedInUser(user) {
+  if (user?.username) {
+    localStorage.setItem("username", user.username);
+    localStorage.setItem("profilePath", `/@${user.username}`);
+  }
+}
+
+function forgetSignedInUser() {
+  localStorage.removeItem("username");
+  localStorage.removeItem("profilePath");
 }
 
 async function readApiResponse(res, fallbackMessage) {
@@ -54,13 +70,16 @@ export function AuthProvider({ children }) {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
+        rememberSignedInUser(data.user);
       } else {
         localStorage.removeItem("token");
+        forgetSignedInUser();
         setToken(null);
         setUser(null);
       }
     } catch {
       // Backend unreachable — treat as signed out for UI until /auth/me succeeds
+      forgetSignedInUser();
       setUser(null);
     } finally {
       setLoading(false);
@@ -80,6 +99,7 @@ export function AuthProvider({ children }) {
       });
       const data = await readApiResponse(res, "Login failed");
       localStorage.setItem("token", data.token);
+      rememberSignedInUser(data.user);
       setToken(data.token);
       setUser(data.user);
       return data.user;
@@ -104,6 +124,7 @@ export function AuthProvider({ children }) {
         });
         const data = await readApiResponse(res, "Registration failed");
         localStorage.setItem("token", data.token);
+        rememberSignedInUser(data.user);
         setToken(data.token);
         setUser(data.user);
         return data.user;
@@ -116,6 +137,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem("token");
+    forgetSignedInUser();
     setToken(null);
     setUser(null);
   }, []);
@@ -126,10 +148,8 @@ export function AuthProvider({ children }) {
       if (!token || !userId) {
         throw new Error("You must be signed in to update your profile");
       }
-      const { updateProfile: updateProfileApi } = await import(
-        "../../profile/services/profileApi"
-      );
       const data = await updateProfileApi(token, userId, payload);
+      rememberSignedInUser(data.user);
       setUser(data.user);
       return data.user;
     },
@@ -144,10 +164,8 @@ export function AuthProvider({ children }) {
       }
       setAvatarPreview(imageBase64);
       try {
-        const { uploadProfileAvatar } = await import(
-          "../../profile/services/profileApi"
-        );
         const data = await uploadProfileAvatar(token, userId, imageBase64);
+        rememberSignedInUser(data.user);
         setUser(data.user);
         return data.user;
       } finally {

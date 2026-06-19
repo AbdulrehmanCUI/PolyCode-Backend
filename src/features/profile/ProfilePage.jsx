@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "../auth/context/AuthContext";
 import ProfileEditSection from "./components/ProfileEditSection";
 import ProfileHero from "./components/ProfileHero";
@@ -228,12 +228,17 @@ function getCompletedTrackCertificate(track) {
 
 export default function ProfilePage() {
   const { username } = useParams();
+  const location = useLocation();
   const { user, isAuthenticated, loading } = useAuth();
   const [editOpen, setEditOpen] = React.useState(false);
   const [publicUser, setPublicUser] = React.useState(null);
   const [profileLoading, setProfileLoading] = React.useState(false);
   const [profileError, setProfileError] = React.useState("");
-  const routeUsername = username?.replace(/^@/, "").trim().toLowerCase();
+  const pathUsername = location.pathname.match(/^\/@([^/]+)$/)?.[1];
+  const routeUsername = (username || pathUsername)
+    ?.replace(/^@/, "")
+    .trim()
+    .toLowerCase();
   const signedInUsername = user?.username?.toLowerCase();
   const isOwnProfile =
     !routeUsername || Boolean(signedInUsername && routeUsername === signedInUsername);
