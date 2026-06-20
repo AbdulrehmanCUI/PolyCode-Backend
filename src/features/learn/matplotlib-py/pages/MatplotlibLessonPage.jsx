@@ -4,35 +4,23 @@ import NumpyIntroTheory from "../../numpy-py/components/NumpyIntroTheory";
 import OopsSidebar from "../../oops-cpp/components/OopsSidebar";
 import LearnProfileMenu from "../../shared/LearnProfileMenu";
 import LessonContentShell from "../../shared/LessonContentShell";
-import CsharpCodeChallenge from "../components/CsharpCodeChallenge";
+import PythonCodeChallenge from "../../numpy-py/components/PythonCodeChallenge";
 import {
-  CSHARP_CHAPTERS,
-  CSHARP_LESSONS,
-  CSHARP_TOTAL_XP,
-} from "../data/csharpCurriculum";
-import useCsharpProgress from "../hooks/useCsharpProgress";
-import useLessonReadGate from "../../shared/useLessonReadGate";
-import LessonChallengeTab from "../../shared/LessonChallengeTab";
+  MATPLOTLIB_CHAPTERS,
+  MATPLOTLIB_LESSONS,
+  MATPLOTLIB_TOTAL_XP,
+} from "../data/matplotlibCurriculum";
+import useMatplotlibProgress from "../hooks/usematplotlibProgress";
 import { useLessonAssistantContext } from "../../../assistant/hooks/useLessonAssistantContext";
 
-const BASE_PATH = "/learn/c-sharp-fundamentals";
-const READ_GATE_PREFIX = "csharp";
+const BASE_PATH = "/learn/matplotlib-py";
 
-export default function CsharpLessonPage() {
+export default function MatplotlibLessonPage() {
   const { lessonId } = useParams();
   const navigate = useNavigate();
   const [tab, setTab] = useState("theory");
   const [focusMode, setFocusMode] = useState(false);
-  const {
-    markedAsRead,
-    markAsRead,
-    confidence,
-    handleConfidenceChange,
-    createGoToChallenge,
-    challengeTabLocked,
-  } = useLessonReadGate(READ_GATE_PREFIX, lessonId);
-  const goToChallenge = createGoToChallenge(setTab);
-  
+  const [confidence, setConfidence] = useState("");
   const {
     user,
     isAuthenticated,
@@ -45,22 +33,20 @@ export default function CsharpLessonPage() {
     saveCode,
     saveNote,
     toggleBookmark,
-  } = useCsharpProgress();
-  
+  } = useMatplotlibProgress();
   const [noteDraft, setNoteDraft] = useState("");
   const codeSaveTimer = useRef(null);
 
-  const lesson = CSHARP_LESSONS.find((item) => item.id === lessonId);
-  const lessonIdx = CSHARP_LESSONS.findIndex(
+  const lesson = MATPLOTLIB_LESSONS.find((item) => item.id === lessonId);
+  const lessonIdx = MATPLOTLIB_LESSONS.findIndex(
     (item) => item.id === lessonId,
   );
-  const prev = CSHARP_LESSONS[lessonIdx - 1];
-  const next = CSHARP_LESSONS[lessonIdx + 1];
+  const prev = MATPLOTLIB_LESSONS[lessonIdx - 1];
+  const next = MATPLOTLIB_LESSONS[lessonIdx + 1];
 
-  // Bridges the workspace editor metadata into the AI Copilot side-drawer panel
   useLessonAssistantContext({
-    course: "C# Fundamentals",
-    language: "C#",
+    course: "Matplotlib",
+    language: "Python",
     lesson,
     chapter: lesson?.chapterTitle,
     tab,
@@ -79,6 +65,12 @@ export default function CsharpLessonPage() {
     setNoteDraft(getLessonNote(lessonId));
   }, [lessonId, getLessonNote]);
 
+  useEffect(() => {
+    setConfidence(
+      localStorage.getItem(`matplotlib_py_confidence_${lessonId}`) || "",
+    );
+  }, [lessonId]);
+
   useEffect(
     () => () => {
       window.clearTimeout(codeSaveTimer.current);
@@ -89,9 +81,9 @@ export default function CsharpLessonPage() {
   if (!lesson) {
     return (
       <div className="oops-not-found">
-        <p>C# lesson not found.</p>
+        <p>Matplotlib lesson not found.</p>
         <button type="button" onClick={() => navigate(BASE_PATH)}>
-          ← Back to C# Fundamentals
+          ← Back to Matplotlib
         </button>
       </div>
     );
@@ -100,10 +92,9 @@ export default function CsharpLessonPage() {
   const isCompleted = isAuthenticated && !!progress[lessonId];
   const isBookmarked = bookmarks.includes(lessonId);
   const completedCount = Object.keys(progress).length;
-  const earnedXP = CSHARP_LESSONS.filter((item) => progress[item.id]).reduce(
-    (sum, item) => sum + item.xp,
-    0,
-  );
+  const earnedXP = MATPLOTLIB_LESSONS.filter(
+    (item) => progress[item.id],
+  ).reduce((sum, item) => sum + item.xp, 0);
 
   async function handleChallengeComplete() {
     await completeLesson(lesson);
@@ -120,14 +111,19 @@ export default function CsharpLessonPage() {
     }, 700);
   }
 
+  function handleConfidenceChange(value) {
+    setConfidence(value);
+    localStorage.setItem(`matplotlib_py_confidence_${lessonId}`, value);
+  }
+
   return (
     <div className={`oops-lesson-page ${focusMode ? "oops-focus-mode" : ""}`}>
       <OopsSidebar
         currentLessonId={lessonId}
         progress={progress}
-        chapters={CSHARP_CHAPTERS}
+        chapters={MATPLOTLIB_CHAPTERS}
         basePath={BASE_PATH}
-        title="C# Fundamentals"
+        title="Matplotlib · py"
       />
 
       <div className="oops-lesson-main">
@@ -137,7 +133,7 @@ export default function CsharpLessonPage() {
             className="oops-back-btn"
             onClick={() => navigate(BASE_PATH)}
           >
-            ← C# Fundamentals
+            ← Matplotlib · Python
           </button>
           <div className="oops-lesson-breadcrumb">
             <span style={{ color: lesson.chapterColor }}>
@@ -165,16 +161,16 @@ export default function CsharpLessonPage() {
           </button>
           <LearnProfileMenu
             user={user}
-            trackTitle="C# Fundamentals"
+            trackTitle="Matplotlib · py"
             syncLabel={
               isAuthenticated
-                ? "C# progress saved to your account"
+                ? "Matplotlib progress saved to your account"
                 : "Sign in to save progress"
             }
             completedCount={completedCount}
-            totalLessons={CSHARP_LESSONS.length}
+            totalLessons={MATPLOTLIB_LESSONS.length}
             earnedXP={earnedXP}
-            totalXP={CSHARP_TOTAL_XP}
+            totalXP={MATPLOTLIB_TOTAL_XP}
             bookmarksCount={bookmarks.length}
             streak={0}
           />
@@ -188,18 +184,19 @@ export default function CsharpLessonPage() {
           >
             Theory
           </button>
-          <LessonChallengeTab
-            active={tab === "challenge"}
-            locked={challengeTabLocked}
-            xp={lesson.xp}
-            onClick={goToChallenge}
-          />
+          <button
+            type="button"
+            className={`oops-tab ${tab === "challenge" ? "active" : ""}`}
+            onClick={() => setTab("challenge")}
+          >
+            Challenge <span className="oops-tab-xp">+{lesson.xp} XP</span>
+          </button>
         </div>
 
         <LessonContentShell
-          storageKey={`csharp-fundamentals:${lessonId}`}
+          storageKey={`matplotlib-py:${lessonId}`}
           videoUrl={lesson.videoUrl}
-          videoTitle={`${lesson.title} — C#`}
+          videoTitle={`${lesson.title} — Matplotlib`}
         >
           {tab === "theory" ? (
             <NumpyIntroTheory
@@ -209,12 +206,10 @@ export default function CsharpLessonPage() {
               onSaveNote={handleSaveNote}
               confidence={confidence}
               onConfidenceChange={handleConfidenceChange}
-              markedAsRead={markedAsRead}
-              onMarkAsRead={markAsRead}
-              onGoChallenge={goToChallenge}
+              onGoChallenge={() => setTab("challenge")}
             />
           ) : (
-            <CsharpCodeChallenge
+            <PythonCodeChallenge
               challenge={lesson.challenge}
               accentColor={lesson.chapterColor}
               isCompleted={isCompleted}

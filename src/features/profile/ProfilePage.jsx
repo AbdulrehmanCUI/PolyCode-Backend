@@ -1,6 +1,7 @@
 import React from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../auth/context/AuthContext";
+import { rememberSignedInUser } from "../../lib/authSession";
 import ProfileEditSection from "./components/ProfileEditSection";
 import ProfileHero from "./components/ProfileHero";
 import { ALL_LESSONS, TOTAL_XP } from "../learn/oops-cpp/data/oopsCurriculum";
@@ -237,7 +238,8 @@ function getCompletedTrackCertificate(track) {
 export default function ProfilePage() {
   const { username } = useParams();
   const location = useLocation();
-  const { user, token, isAuthenticated, loading } = useAuth();
+  const navigate = useNavigate();
+  const { user, isAuthenticated, loading } = useAuth();
   const [editOpen, setEditOpen] = React.useState(false);
   const [publicUser, setPublicUser] = React.useState(null);
   const [profileLoading, setProfileLoading] = React.useState(false);
@@ -256,7 +258,11 @@ export default function ProfilePage() {
     .toLowerCase();
   const signedInUsername = user?.username?.toLowerCase();
   const isOwnProfile =
-    !routeUsername || Boolean(signedInUsername && routeUsername === signedInUsername);
+    isAuthenticated &&
+    user &&
+    (!routeUsername ||
+      (signedInUsername && routeUsername === signedInUsername) ||
+      !signedInUsername);
   const profileUser = isOwnProfile ? user : publicUser;
   const oops = useOopsProgress();
   const pointers = usePointersProgress();
@@ -324,6 +330,22 @@ export default function ProfilePage() {
   const routeCertificate = certificateSlug
     ? completedCertificates.find((certificate) => certificate.slug === certificateSlug)
     : null;
+
+  React.useEffect(() => {
+    if (!isAuthenticated || !user?.username || !routeUsername) return;
+    if (routeUsername === user.username.toLowerCase()) {
+      rememberSignedInUser(user);
+      return;
+    }
+
+    const storedPath = localStorage.getItem("profilePath");
+    if (
+      storedPath &&
+      storedPath.toLowerCase() === location.pathname.toLowerCase()
+    ) {
+      navigate(`/@${user.username}`, { replace: true });
+    }
+  }, [isAuthenticated, user, routeUsername, location.pathname, navigate]);
 
   React.useEffect(() => {
     if (!routeUsername || routeUsername === signedInUsername) {

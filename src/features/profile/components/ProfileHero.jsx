@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ProfileAvatar from "./ProfileAvatar";
+import ProfileLanguageBadges from "./ProfileLanguageBadges";
 import {
   getDisplayBio,
   getDisplayName,
