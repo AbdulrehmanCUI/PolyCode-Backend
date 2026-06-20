@@ -17,8 +17,10 @@ export default function CourseCertificate({
   totalLessons,
   completedCount,
   earnedXP,
+  recipient,
 }) {
   const { user } = useAuth();
+  const certificateUser = recipient || user;
   const certificateRef = useRef();
   const certId = useRef(null);
 
@@ -28,9 +30,9 @@ export default function CourseCertificate({
   const isComplete = completedCount >= totalLessons;
 
   const userName =
-    user?.firstName && user?.lastName
-      ? `${user.firstName} ${user.lastName}`
-      : user?.username || "Learner";
+    certificateUser?.firstName && certificateUser?.lastName
+      ? `${certificateUser.firstName} ${certificateUser.lastName}`
+      : certificateUser?.name || certificateUser?.username || "Learner";
 
   const issueDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -43,7 +45,10 @@ export default function CourseCertificate({
     let cancelled = false;
 
     if (!certId.current) {
-      certId.current = generateLocalCertId(user?._id || user?.id, courseName);
+      certId.current = generateLocalCertId(
+        certificateUser?._id || certificateUser?.id,
+        courseName,
+      );
     }
 
     const queryParams = new URLSearchParams({
@@ -82,7 +87,7 @@ export default function CourseCertificate({
   }, [
     isComplete,
     courseName,
-    user,
+    certificateUser,
     userName,
     issueDate,
     totalLessons,
