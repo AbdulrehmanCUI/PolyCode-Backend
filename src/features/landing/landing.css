@@ -76,6 +76,13 @@
   padding-bottom: 6rem;
 }
 
+.landing-bg-wrap,
+.landing-bg-orb,
+.landing-bg-particle,
+.landing-bg-grid-drift {
+  display: none;
+}
+
 
 /* ==========================================
 NAVBAR
