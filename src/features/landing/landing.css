@@ -24,7 +24,7 @@
   background:
     radial-gradient(
       circle at 20% 20%,
-      rgba(124, 58, 237, 0.18),
+      rgba(13, 142, 9, 0.18),
       transparent 40%
     ),
     radial-gradient(circle at 80% 30%, rgba(0, 229, 255, 0.12), transparent 40%);
@@ -3922,6 +3922,7 @@ NAVBAR
 .cs-card {
   scroll-snap-align: start;
   position: relative;
+  margin-top: 8px;
   border: 1px solid var(--border, #1e2433);
   border-radius: 18px;
   background: rgba(13, 17, 23, 0.85);
