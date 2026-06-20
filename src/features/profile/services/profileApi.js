@@ -36,6 +36,29 @@ export async function getProfileByUsername(username) {
   return readResponse(res, "Could not load profile");
 }
 
+export async function getFollowStatus(token, username) {
+  const cleanUsername = String(username || "").replace(/^@/, "").trim();
+  const res = await fetch(
+    `${getApiBase()}/auth/username/${encodeURIComponent(cleanUsername)}/follow-status`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  return readResponse(res, "Could not load follow status");
+}
+
+export async function setFollowStatus(token, username, shouldFollow) {
+  const cleanUsername = String(username || "").replace(/^@/, "").trim();
+  const res = await fetch(
+    `${getApiBase()}/auth/username/${encodeURIComponent(cleanUsername)}/follow`,
+    {
+      method: shouldFollow ? "POST" : "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    },
+  );
+  return readResponse(res, shouldFollow ? "Could not follow user" : "Could not unfollow user");
+}
+
 export async function uploadProfileAvatar(token, userId, imageBase64) {
   const res = await fetch(`${getApiBase()}/auth/user/${userId}/avatar`, {
     method: "POST",

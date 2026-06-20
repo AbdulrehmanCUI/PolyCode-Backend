@@ -350,7 +350,7 @@ function ProfileOrMainFallback({
 }) {
   const location = useLocation();
 
-  if (/^\/@[^/]+$/.test(location.pathname)) {
+  if (/^\/@[^/]+(?:\/certificates\/[^/]+)?$/.test(location.pathname)) {
     return (
       <ThemedShell theme={theme}>
         <LearnShell

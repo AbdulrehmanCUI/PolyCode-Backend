@@ -5085,6 +5085,22 @@ body {
   background: rgba(0, 212, 255, 0.08);
 }
 
+.profile-hero-message-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.profile-follow-error {
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  text-align: left;
+}
+
+.profile-follow-error p {
+  margin: 0;
+  color: #fca5a5;
+}
+
 .profile-hero-notice {
   margin: 10px 0 0;
   color: var(--acid, #ffe566);
@@ -5668,7 +5684,160 @@ body {
 
 .profile-certificates-list {
   display: grid;
-  gap: 22px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.profile-certificate-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(var(--acid-rgb), 0.08), transparent 38%),
+    rgba(8, 13, 22, 0.82);
+  padding: 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+}
+
+.profile-certificate-card span,
+.profile-certificate-modal-head span {
+  display: inline-flex;
+  margin-bottom: 5px;
+  color: var(--acid, #ffe566);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.profile-certificate-card h3 {
+  margin: 0 0 6px;
+  color: var(--txt-0, #f8fafc);
+  font-size: 1.05rem;
+}
+
+.profile-certificate-card p {
+  margin: 0;
+  color: var(--txt-2, #94a3b8);
+  font-size: 0.86rem;
+}
+
+.profile-certificate-link,
+.profile-certificate-card button,
+.profile-certificate-modal-head button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  background: var(--acid, #ffe566);
+  color: #05070f;
+  padding: 0.72rem 0.95rem;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.profile-certificate-link:hover,
+.profile-certificate-card button:hover,
+.profile-certificate-modal-head button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(var(--acid-rgb), 0.18);
+}
+
+.profile-certificate-page {
+  max-width: 1120px;
+}
+
+.profile-certificate-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.profile-certificate-page-head span {
+  display: inline-flex;
+  margin-bottom: 5px;
+  color: var(--acid, #ffe566);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.profile-certificate-page-head h1 {
+  margin: 0;
+  color: var(--txt-0, #f8fafc);
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+}
+
+.profile-certificate-page-head a {
+  flex: 0 0 auto;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  background: var(--glass, rgba(255, 255, 255, 0.03));
+  color: var(--txt-0, #f8fafc);
+  padding: 0.7rem 0.9rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.profile-certificate-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 3vw, 32px);
+}
+
+.profile-certificate-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.profile-certificate-modal-content {
+  position: relative;
+  z-index: 1;
+  width: min(1100px, 100%);
+  max-height: min(92vh, 860px);
+  overflow: auto;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 18px;
+  background: #05070f;
+  padding: clamp(14px, 2vw, 22px);
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.5);
+}
+
+.profile-certificate-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.profile-certificate-modal-head h2 {
+  margin: 0;
+  color: var(--txt-0, #f8fafc);
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+}
+
+.profile-certificate-modal-content .certificate-wrapper {
+  margin: 0;
 }
 
 .profile-empty-state {
@@ -6707,9 +6876,20 @@ body {
   .oops-confidence-panel,
   .profile-hero-main,
   .profile-overview-grid,
+  .profile-certificates-list,
   .profile-track-grid,
   .profile-track-stats {
     grid-template-columns: 1fr;
+  }
+
+  .profile-certificate-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-certificate-page-head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .profile-hero-side {

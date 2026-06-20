@@ -22,7 +22,11 @@ import {
 } from "../learn/pandas-py/data/pandasCurriculum";
 import usePandasProgress from "../learn/pandas-py/hooks/usePandasProgress";
 import CourseCertificate from "../learn/shared/CourseCertificate";
-import { getProfileByUsername } from "./services/profileApi";
+import {
+  getFollowStatus,
+  getProfileByUsername,
+  setFollowStatus,
+} from "./services/profileApi";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MIN_ACTIVITY_DAYS = 30;
@@ -222,6 +226,10 @@ function getCompletedTrackCertificate(track) {
 
   return {
     ...track,
+    slug: track.courseName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, ""),
     completedCount,
     earnedXP,
   };
@@ -231,12 +239,19 @@ export default function ProfilePage() {
   const { username } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user, token, isAuthenticated, loading } = useAuth();
   const [editOpen, setEditOpen] = React.useState(false);
   const [publicUser, setPublicUser] = React.useState(null);
   const [profileLoading, setProfileLoading] = React.useState(false);
   const [profileError, setProfileError] = React.useState("");
-  const pathUsername = location.pathname.match(/^\/@([^/]+)$/)?.[1];
+  const [isFollowing, setIsFollowing] = React.useState(false);
+  const [followSaving, setFollowSaving] = React.useState(false);
+  const [followError, setFollowError] = React.useState("");
+  const profileRouteMatch = location.pathname.match(
+    /^\/@([^/]+)(?:\/certificates\/([^/]+))?$/,
+  );
+  const pathUsername = profileRouteMatch?.[1];
+  const certificateSlug = profileRouteMatch?.[2]?.toLowerCase();
   const routeUsername = (username || pathUsername)
     ?.replace(/^@/, "")
     .trim()
@@ -311,6 +326,10 @@ export default function ProfilePage() {
       progress: pandas.completedMap,
     }),
   ].filter(Boolean);
+  const certificateOwnerPath = `/@${routeUsername || signedInUsername || profileUser?.username}`;
+  const routeCertificate = certificateSlug
+    ? completedCertificates.find((certificate) => certificate.slug === certificateSlug)
+    : null;
 
   React.useEffect(() => {
     if (!isAuthenticated || !user?.username || !routeUsername) return;
@@ -332,6 +351,8 @@ export default function ProfilePage() {
     if (!routeUsername || routeUsername === signedInUsername) {
       setPublicUser(null);
       setProfileError("");
+      setIsFollowing(false);
+      setFollowError("");
       return undefined;
     }
 
@@ -357,6 +378,26 @@ export default function ProfilePage() {
       cancelled = true;
     };
   }, [routeUsername, signedInUsername]);
+
+  React.useEffect(() => {
+    if (!token || !routeUsername || routeUsername === signedInUsername) {
+      setIsFollowing(false);
+      return undefined;
+    }
+
+    let cancelled = false;
+    getFollowStatus(token, routeUsername)
+      .then((data) => {
+        if (!cancelled) setIsFollowing(Boolean(data.isFollowing));
+      })
+      .catch(() => {
+        if (!cancelled) setIsFollowing(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, routeUsername, signedInUsername]);
 
   React.useEffect(() => {
     const node = activityWrapRef.current;
@@ -404,15 +445,82 @@ export default function ProfilePage() {
     );
   }
 
+  const handleToggleFollow = async () => {
+    if (!token || !routeUsername || isOwnProfile || followSaving) return;
+
+    const nextState = !isFollowing;
+    setFollowSaving(true);
+    setFollowError("");
+    try {
+      const data = await setFollowStatus(token, routeUsername, nextState);
+      setIsFollowing(Boolean(data.isFollowing));
+      if (data.targetUser) {
+        setPublicUser(data.targetUser);
+      }
+    } catch (error) {
+      setFollowError(error.message || "Could not update follow status");
+    } finally {
+      setFollowSaving(false);
+    }
+  };
+
+  if (certificateSlug) {
+    return (
+      <main className="profile-page profile-certificate-page">
+        <div className="profile-certificate-page-head">
+          <div>
+            <span>Certificate</span>
+            <h1>
+              {routeCertificate
+                ? routeCertificate.courseName
+                : "Certificate not found"}
+            </h1>
+          </div>
+          <Link to={certificateOwnerPath}>Back to profile</Link>
+        </div>
+
+        {routeCertificate ? (
+          <CourseCertificate
+            courseName={routeCertificate.courseName}
+            totalLessons={routeCertificate.lessons.length}
+            completedCount={routeCertificate.completedCount}
+            earnedXP={routeCertificate.earnedXP}
+            totalXP={routeCertificate.totalXP}
+            recipient={profileUser}
+          />
+        ) : (
+          <section className="profile-empty-state">
+            <h1>Certificate not available</h1>
+            <p>
+              This course certificate does not exist yet, or the course is not
+              completed.
+            </p>
+            <Link to={certificateOwnerPath}>View completed courses</Link>
+          </section>
+        )}
+      </main>
+    );
+  }
+
   return (
     <main className="profile-page">
       <ProfileHero
         user={profileUser}
-        isAuthenticated={isAuthenticated && isOwnProfile}
+        isAuthenticated={isAuthenticated}
+        canEdit={isAuthenticated && isOwnProfile}
         totalStreak={totalStreak}
         editOpen={editOpen}
         onToggleEdit={() => setEditOpen((open) => !open)}
+        isFollowing={isFollowing}
+        followSaving={followSaving}
+        onToggleFollow={handleToggleFollow}
       />
+
+      {followError && (
+        <section className="profile-empty-state profile-follow-error">
+          <p>{followError}</p>
+        </section>
+      )}
 
       {isOwnProfile && (
         <ProfileEditSection
@@ -494,18 +602,29 @@ export default function ProfilePage() {
         <section className="profile-certificates-section">
           <div className="profile-section-heading">
             <span>Certificates</span>
-            <h2>Your completed course certificates</h2>
+            <h2>Completed courses</h2>
           </div>
           <div className="profile-certificates-list">
             {completedCertificates.map((certificate) => (
-              <CourseCertificate
+              <article
                 key={certificate.courseName}
-                courseName={certificate.courseName}
-                totalLessons={certificate.lessons.length}
-                completedCount={certificate.completedCount}
-                earnedXP={certificate.earnedXP}
-                totalXP={certificate.totalXP}
-              />
+                className="profile-certificate-card"
+              >
+                <div>
+                  <span>Course completed</span>
+                  <h3>{certificate.courseName}</h3>
+                  <p>
+                    {certificate.completedCount}/{certificate.lessons.length} lessons
+                    completed · {certificate.earnedXP}/{certificate.totalXP} XP earned
+                  </p>
+                </div>
+                <Link
+                  to={`${certificateOwnerPath}/certificates/${certificate.slug}`}
+                  className="profile-certificate-link"
+                >
+                  View certificate
+                </Link>
+              </article>
             ))}
           </div>
         </section>
