@@ -26,11 +26,14 @@ import {
 import { ASSISTANT_CONFIG } from "../lib/assistantConfig";
 import { useTypewriter } from "../lib/useTypewriter";
 import AssistantAvatar from "./AssistantAvatar";
+import AssistantMarkdown from "../../assistant/components/AssistantMarkdown";
 
 const MAX_STORED_MESSAGES = 20;
 const DOCK_POSITION_KEY = "polycode_assistant_dock_position";
 const DOCK_MARGIN = 12;
 const DRAG_CLICK_THRESHOLD = 6;
+const ASSISTANT_LEVEL_KEY = "polycode_assistant_level";
+const ASSISTANT_LEVELS = ["beginner", "intermediate", "advanced"];
 
 const WELCOME_MESSAGE = {
   id: "welcome",
@@ -104,6 +107,23 @@ function saveDockPosition(position) {
   }
 }
 
+function loadAssistantLevel() {
+  try {
+    const stored = localStorage.getItem(ASSISTANT_LEVEL_KEY);
+    return ASSISTANT_LEVELS.includes(stored) ? stored : "beginner";
+  } catch {
+    return "beginner";
+  }
+}
+
+function saveAssistantLevel(level) {
+  try {
+    localStorage.setItem(ASSISTANT_LEVEL_KEY, level);
+  } catch {
+    /* ignore */
+  }
+}
+
 function saveSession(session) {
   try {
     const trimmed =
@@ -123,30 +143,6 @@ function saveSession(session) {
   } catch {
     /* ignore */
   }
-}
-
-function renderMarkdown(text) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} style={{ fontWeight: 600, color: "var(--acid)" }}>
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
-    const lines = part.split("\n");
-    return (
-      <span key={i}>
-        {lines.map((line, j) => (
-          <span key={j}>
-            {line}
-            {j < lines.length - 1 ? <br /> : null}
-          </span>
-        ))}
-      </span>
-    );
-  });
 }
 
 function ReplyFeedback({ feedback, onRate, disabled, required }) {
@@ -202,49 +198,19 @@ function MentorReply({
   }, [shouldStream, done, msg.id, onStreamComplete]);
 
   return (
-    <article style={{ position: "relative", paddingLeft: "1.25rem" }}>
-      <span
-        aria-hidden
-        style={{
-          position: "absolute",
-          left: 0,
-          top: "0.75rem",
-          height: "calc(100% - 12px)",
-          width: 3,
-          borderRadius: 999,
-          background: "var(--acid)",
-        }}
-      />
-      <div
-        style={{
-          borderRadius: "0.75rem",
-          border: "1px solid var(--border)",
-          background: "rgba(10,18,24,0.9)",
-          padding: "1rem",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+    <article className="assistant-mentor-reply">
+      <span aria-hidden className="assistant-mentor-accent" />
+      <div className="assistant-mentor-card">
+        <div className="assistant-mentor-meta">
           <AssistantAvatar size="sm" />
-          <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--acid)" }}>
-            {ASSISTANT_CONFIG.name}
-          </span>
+          <span className="assistant-mentor-name">{ASSISTANT_CONFIG.name}</span>
         </div>
-        <p style={{ fontSize: "13px", lineHeight: 1.6, color: "#e2e8f0", margin: 0 }}>
-          {renderMarkdown(visible)}
+        <div className="assistant-markdown">
+          <AssistantMarkdown content={visible} />
           {!done && shouldStream ? (
-            <span
-              style={{
-                display: "inline-block",
-                width: 2,
-                height: "1em",
-                marginLeft: 2,
-                background: "var(--acid)",
-                verticalAlign: "middle",
-                animation: "pulse 1s infinite",
-              }}
-            />
+            <span className="assistant-stream-cursor" />
           ) : null}
-        </p>
+        </div>
         {canRate ? (
           <ReplyFeedback
             feedback={msg.feedback}
@@ -260,20 +226,8 @@ function MentorReply({
 
 function ThinkingIndicator() {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "0.75rem",
-        borderRadius: "0.75rem",
-        border: "1px solid rgba(34,211,238,0.15)",
-        background: "rgba(34,211,238,0.05)",
-        padding: "0.75rem 1rem",
-      }}
-    >
-      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: "0.75rem", color: "rgba(103,232,249,0.8)" }}>
-        PolyMentor is thinking…
-      </span>
+    <div className="assistant-thinking">
+      <span className="assistant-thinking-text">PolyMentor is thinking…</span>
     </div>
   );
 }
@@ -317,6 +271,7 @@ export default function AssistantFab() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
   const [feedbackSavingId, setFeedbackSavingId] = useState(null);
+  const [assistantLevel, setAssistantLevel] = useState(() => loadAssistantLevel());
   const messagesEndRef = useRef(null);
   const messagesScrollRef = useRef(null);
   const inputRef = useRef(null);
@@ -399,6 +354,10 @@ export default function AssistantFab() {
   useEffect(() => {
     saveSession(session);
   }, [session]);
+
+  useEffect(() => {
+    saveAssistantLevel(assistantLevel);
+  }, [assistantLevel]);
 
   useEffect(() => {
     if (!open) return;
@@ -506,6 +465,7 @@ export default function AssistantFab() {
           history,
           session_id: currentSession.sessionId,
           context: assistantContext,
+          level: assistantLevel,
           assistant_message_id: assistantId,
         });
         const assistantMsg = {
@@ -529,7 +489,7 @@ export default function AssistantFab() {
         setSending(false);
       }
     },
-    [sending, assistantContext],
+    [sending, assistantContext, assistantLevel],
   );
 
   const send = useCallback(async () => {
@@ -678,28 +638,36 @@ export default function AssistantFab() {
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
             className="assistant-panel polym_mentor-panel"
           >
-            <div
-              style={{
-                flexShrink: 0,
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-                padding: "1.25rem",
-              }}
-            >
+            <div className="assistant-panel-header">
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.75rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0 }}>
                   <AssistantAvatar size="md" alt={ASSISTANT_CONFIG.name} />
                   <div>
-                    <p id="polym_mentor-title" style={{ margin: 0, fontFamily: "ui-monospace, monospace", fontSize: "1.125rem", fontWeight: 700, color: "#fff" }}>
+                    <p id="polym_mentor-title" className="assistant-panel-title">
                       {ASSISTANT_CONFIG.name}
                     </p>
-                    <p style={{ margin: 0, fontSize: "0.75rem", color: "#94a3b8" }}>
-                      {ASSISTANT_CONFIG.tagline}
-                    </p>
+                    <p className="assistant-panel-tagline">{ASSISTANT_CONFIG.tagline}</p>
                     {contextLabel ? (
                       <span className="assistant-context-badge" title={contextLabel}>
                         {contextLabel}
                       </span>
                     ) : null}
+                    <label className="assistant-level-label">
+                      Level
+                      <select
+                        value={assistantLevel}
+                        onChange={(event) => setAssistantLevel(event.target.value)}
+                        disabled={sending}
+                        aria-label="PolyMentor response level"
+                        className="assistant-level-select"
+                      >
+                        {ASSISTANT_LEVELS.map((level) => (
+                          <option key={level} value={level}>
+                            {level}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "0.25rem" }}>
@@ -708,7 +676,7 @@ export default function AssistantFab() {
                     onClick={clearSession}
                     disabled={sending}
                     aria-label="Reset session"
-                    style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "0.5rem" }}
+                    className="assistant-icon-btn"
                   >
                     <Trash2 size={16} />
                   </button>
@@ -716,7 +684,7 @@ export default function AssistantFab() {
                     type="button"
                     onClick={() => setOpen(false)}
                     aria-label="Minimize"
-                    style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "0.5rem" }}
+                    className="assistant-icon-btn"
                   >
                     <Minus size={16} />
                   </button>
@@ -726,16 +694,7 @@ export default function AssistantFab() {
 
             <div
               ref={messagesScrollRef}
-              className="polym_mentor-scroll"
-              style={{
-                flex: 1,
-                minHeight: 0,
-                overflowY: "auto",
-                padding: "1.25rem",
-                display: "flex",
-                flexDirection: "column",
-                gap: "1.25rem",
-              }}
+              className="polym_mentor-scroll assistant-messages"
             >
               {session.messages.map((msg) => (
                 <div key={msg.id}>
@@ -764,24 +723,14 @@ export default function AssistantFab() {
 
               {showQuickPrompts ? (
                 <div>
-                  <p style={{ margin: "0 0 0.5rem", fontFamily: "ui-monospace, monospace", fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#64748b" }}>
-                    Quick prompts
-                  </p>
+                  <p className="assistant-quick-label">Quick prompts</p>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                     {quickPrompts.map((prompt) => (
                       <button
                         key={prompt}
                         type="button"
                         onClick={() => sendText(prompt)}
-                        style={{
-                          borderRadius: "0.5rem",
-                          border: "1px solid var(--border)",
-                          background: "var(--glass)",
-                          padding: "0.5rem 0.75rem",
-                          fontSize: "0.75rem",
-                          color: "rgba(167,243,208,0.9)",
-                          cursor: "pointer",
-                        }}
+                        className="assistant-quick-btn"
                       >
                         {prompt}
                       </button>
@@ -791,32 +740,13 @@ export default function AssistantFab() {
               ) : null}
 
               {error ? (
-                <div
-                  style={{
-                    borderRadius: "0.5rem",
-                    border: "1px solid rgba(239,68,68,0.25)",
-                    background: "rgba(239,68,68,0.1)",
-                    padding: "0.75rem 1rem",
-                    fontFamily: "ui-monospace, monospace",
-                    fontSize: "0.75rem",
-                    color: "#fca5a5",
-                  }}
-                >
-                  error: {error}
-                </div>
+                <div className="assistant-error-box">error: {error}</div>
               ) : null}
 
               <div ref={messagesEndRef} />
             </div>
 
-            <div
-              style={{
-                flexShrink: 0,
-                borderTop: "1px solid rgba(255,255,255,0.06)",
-                background: "#04080d",
-                padding: "1rem",
-              }}
-            >
+            <div className="assistant-footer">
               {pendingFeedback ? (
                 <p className="assistant-feedback-lock-notice" role="status">
                   Like or dislike the last answer before sending another message.
@@ -824,11 +754,8 @@ export default function AssistantFab() {
               ) : null}
               <div
                 className={`assistant-composer${inputLocked && !sending ? " assistant-composer--locked" : ""}`}
-                style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem", borderRadius: "0.75rem", border: "1px solid var(--border)", background: "#0a1018", padding: "0.5rem" }}
               >
-                <span style={{ paddingBottom: "0.5rem", paddingLeft: "0.25rem", fontFamily: "ui-monospace, monospace", fontWeight: 700, color: "var(--acid)" }}>
-                  &gt;
-                </span>
+                <span className="assistant-composer-prompt">&gt;</span>
                 <textarea
                   ref={inputRef}
                   value={draft}
@@ -842,44 +769,19 @@ export default function AssistantFab() {
                   rows={1}
                   disabled={inputLocked}
                   aria-label="Ask PolyMentor"
-                  style={{
-                    flex: 1,
-                    minHeight: "2rem",
-                    maxHeight: "5rem",
-                    resize: "none",
-                    background: "transparent",
-                    border: "none",
-                    outline: "none",
-                    color: "#f1f5f9",
-                    fontSize: "0.875rem",
-                    padding: "0.375rem 0",
-                  }}
+                  className="assistant-composer-input"
                 />
                 <button
                   type="button"
                   onClick={send}
                   disabled={!draft.trim() || inputLocked}
                   aria-label="Send"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 36,
-                    height: 36,
-                    borderRadius: "0.5rem",
-                    border: "none",
-                    background: "var(--acid)",
-                    color: "#fff",
-                    cursor: "pointer",
-                    opacity: !draft.trim() || inputLocked ? 0.3 : 1,
-                  }}
+                  className="assistant-composer-send"
                 >
                   <ChevronRight size={20} />
                 </button>
               </div>
-              <p style={{ margin: "0.5rem 0 0", textAlign: "center", fontFamily: "ui-monospace, monospace", fontSize: "9px", color: "#475569" }}>
-                {ASSISTANT_CONFIG.poweredByLabel}
-              </p>
+              <p className="assistant-powered-by">{ASSISTANT_CONFIG.poweredByLabel}</p>
             </div>
           </motion.aside>
         ) : null}
@@ -917,28 +819,16 @@ export default function AssistantFab() {
               : undefined
           }
         >
-          <div
-            aria-hidden="true"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              background: "none",
-              border: "none",
-              color: "inherit",
-              cursor: draggingDock ? "grabbing" : "grab",
-              padding: 0,
-            }}
-          >
+          <div aria-hidden="true" className="assistant-dock-inner">
             <AssistantAvatar size="lg" alt={ASSISTANT_CONFIG.name} />
-            <span style={{ display: "flex", flexDirection: "column", textAlign: "left" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontFamily: "ui-monospace, monospace", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--acid)" }}>
+            <span className="assistant-dock-copy">
+              <span className="assistant-dock-title">
                 <Zap size={12} />
                 {ASSISTANT_CONFIG.name}
               </span>
-              <span style={{ fontSize: "11px", color: "#94a3b8" }}>Tap to open mentor</span>
+              <span className="assistant-dock-hint">Tap to open mentor</span>
             </span>
-            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: "0.5rem", background: "var(--acid-dim)", color: "var(--acid)" }}>
+            <span className="assistant-dock-sparkle">
               <Sparkles size={16} />
             </span>
           </div>
