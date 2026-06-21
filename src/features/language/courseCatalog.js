@@ -103,12 +103,12 @@ export const languageCourses = {
     },
     {
       tag: "Data Visualization",
-      title: "Matplotlib-py",
+      title: "Matplotlib · py",
       description:
-        "Master the art of plotting, charts, and customizing beautiful data science visualizations from scratch.",
+        "Beginner → Pro: line plots to publication dashboards — 8 chapters, chart selection, Pandas plots, and hands-on challenges.",
       href: "/learn/matplotlib-py",
-      accent: "#239120", // Give it a distinct color hex code
-      icon: Presentation, // You can use 'Presentation', 'LineChart', or 'BarChart2' from lucide-react
+      accent: "#239120",
+      icon: Presentation,
     },
   ],
   javascript: [

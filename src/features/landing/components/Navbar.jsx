@@ -102,7 +102,7 @@ export default function Navbar({ theme = "dark", onThemeChange }) {
             <nav className="landing-nav-links">
               {NAV_LINKS.map((link) => (
                 <button
-                  key={link.label}
+                  key={link.href}
                   className="landing-nav-link"
                   onClick={() => handleNav(link.href)}
                 >
@@ -130,7 +130,7 @@ export default function Navbar({ theme = "dark", onThemeChange }) {
                       const Icon = course.icon;
                       return (
                         <button
-                          key={course.label}
+                          key={course.href}
                           className="ln-dropdown-item"
                           style={{ "--lang-accent": course.accent }}
                           onClick={() => handleNav(course.href)}
@@ -234,7 +234,7 @@ export default function Navbar({ theme = "dark", onThemeChange }) {
         <nav className="landing-mobile-nav">
           {NAV_LINKS.map((link) => (
             <button
-              key={link.label}
+              key={link.href}
               type="button"
               className="landing-mobile-nav-link"
               onClick={() => handleNav(link.href)}
@@ -261,7 +261,7 @@ export default function Navbar({ theme = "dark", onThemeChange }) {
                 const Icon = course.icon;
                 return (
                   <button
-                    key={course.label}
+                    key={course.href}
                     type="button"
                     className="landing-mobile-subnav-link"
                     style={{ "--lang-accent": course.accent }}

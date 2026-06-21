@@ -58,8 +58,26 @@
 .app.theme-light .oops-resume-panel,
 .app.theme-light .oops-tool-panel,
 .app.theme-light .oops-chapter-card,
+.app.theme-light .matplotlib-path-card,
 .app.theme-light .profile-certificate-card {
   box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.app.theme-light .matplotlib-path-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.app.theme-light .matplotlib-path-summary {
+  color: #475569;
+}
+
+.app.theme-light .matplotlib-path-chapters li {
+  color: #64748b;
+}
+
+.app.theme-light .matplotlib-path-cta {
+  color: #0f172a;
 }
 
 .app.theme-classic {
