@@ -73,6 +73,9 @@ const LandingPage = lazyWithChunkRetry(
 const LanguageLandingPage = lazyWithChunkRetry(
   () => import("./features/language/pages/LanguageLandingPage"),
 );
+const AllCoursesPage = lazyWithChunkRetry(
+  () => import("./features/courses/pages/AllCoursesPage"),
+);
 const HomePage = lazyWithChunkRetry(
   () => import("./features/docs/pages/Home/HomePage"),
 );
@@ -589,6 +592,14 @@ function AppRoutes() {
                 continueLanguage={selectedLanguage}
               />
             </StackPickerShell>
+          }
+        />
+        <Route
+          path="/courses"
+          element={
+            <ThemedShell theme={theme}>
+              <AllCoursesPage />
+            </ThemedShell>
           }
         />
         <Route
