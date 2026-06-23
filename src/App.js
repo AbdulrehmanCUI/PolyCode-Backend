@@ -129,6 +129,12 @@ const PandasHub = lazyWithChunkRetry(
 const PandasLessonPage = lazyWithChunkRetry(
   () => import("./features/learn/pandas-py/pages/PandasLessonPage"),
 );
+const AiHub = lazyWithChunkRetry(
+  () => import("./features/learn/ai_ml-py/pages/aiHub"),
+);
+const AiLessonPage = lazyWithChunkRetry(
+  () => import("./features/learn/ai_ml-py/pages/aiLessonPage"),
+);
 const JsFundamentalsHub = lazyWithChunkRetry(
   () => import("./features/learn/js-fundamentals/pages/JsFundamentalsHub"),
 );
@@ -495,7 +501,8 @@ function AppRoutes() {
     if (
       path.startsWith("/learn/numpy-py") ||
       path.startsWith("/learn/pandas-py") ||
-      path.startsWith("/learn/matplotlib-py")
+      path.startsWith("/learn/matplotlib-py") ||
+      path.startsWith("/learn/ai_ml-py")
     ) {
       handleLanguageSelect("Python", { stay: true });
     } else if (path.startsWith("/learn/js-fundamentals")) {
@@ -766,6 +773,52 @@ function AppRoutes() {
                 selectedLanguage={selectedLanguage}
               >
                 <PandasLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        {/* AI/ML Python Course Routes */}
+        <Route
+          path="/learn/ai_ml-py"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <AiHub />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/ai_ml-py/lesson/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <AiLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/ai_ml-py/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <AiLessonPage />
               </LearnShell>
             </ThemedShell>
           }
