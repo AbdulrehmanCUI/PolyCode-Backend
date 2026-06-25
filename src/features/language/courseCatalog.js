@@ -7,6 +7,7 @@ import {
   Play,
   Brain,
   Table2,
+  BrainCircuit,
   Terminal,
   Presentation,
   Coffee,
