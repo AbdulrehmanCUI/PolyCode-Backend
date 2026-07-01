@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  Link,
   useNavigate,
   useLocation,
 } from "react-router-dom";
@@ -31,6 +32,9 @@ import {
 } from "./shared/theme/themes";
 import "./styles/stack-picker-dark.css";
 import "./styles/responsive.css";
+import "./styles/theme-dark.css";
+import "./styles/theme-profile.css";
+import "./styles/theme-light-complete.css";
 
 import LandingShell from "./features/landing/LandingShell";
 
@@ -111,11 +115,27 @@ const PointersHub = lazyWithChunkRetry(
 const PointersLessonPage = lazyWithChunkRetry(
   () => import("./features/learn/pointers-cpp/pages/PointersLessonPage"),
 );
+const DsaHub = lazyWithChunkRetry(
+  () => import("./features/learn/dsa-cpp/pages/DsaHub"),
+);
+const DsaLessonPage = lazyWithChunkRetry(
+  () => import("./features/learn/dsa-cpp/pages/DsaLessonPage"),
+);
 const NumpyHub = lazyWithChunkRetry(
   () => import("./features/learn/numpy-py/pages/NumpyHub"),
 );
 const NumpyLessonPage = lazyWithChunkRetry(
   () => import("./features/learn/numpy-py/pages/NumpyLessonPage"),
+);
+const PythonFundamentalsHub = lazyWithChunkRetry(
+  () =>
+    import("./features/learn/python-fundamentals/pages/PythonFundamentalsHub"),
+);
+const PythonFundamentalsLessonPage = lazyWithChunkRetry(
+  () =>
+    import(
+      "./features/learn/python-fundamentals/pages/PythonFundamentalsLessonPage"
+    ),
 );
 const MatplotlibHub = lazyWithChunkRetry(
   () => import("./features/learn/matplotlib-py/pages/MatplotlibHub"),
@@ -128,6 +148,18 @@ const PandasHub = lazyWithChunkRetry(
 );
 const PandasLessonPage = lazyWithChunkRetry(
   () => import("./features/learn/pandas-py/pages/PandasLessonPage"),
+);
+const FastapiHub = lazyWithChunkRetry(
+  () => import("./features/learn/fastapi-py/pages/FastapiHub"),
+);
+const FastapiLessonPage = lazyWithChunkRetry(
+  () => import("./features/learn/fastapi-py/pages/FastapiLessonPage"),
+);
+const AiHub = lazyWithChunkRetry(
+  () => import("./features/learn/ai_ml-py/pages/aiHub"),
+);
+const AiLessonPage = lazyWithChunkRetry(
+  () => import("./features/learn/ai_ml-py/pages/aiLessonPage"),
 );
 const JsFundamentalsHub = lazyWithChunkRetry(
   () => import("./features/learn/js-fundamentals/pages/JsFundamentalsHub"),
@@ -167,8 +199,18 @@ function AppFooter() {
     <footer className="app-footer">
       <div className="app-footer-inner">
         <div className="app-footer-meta">
-          <span className="app-footer-project">PolyCode</span>
+          <Link to="/" className="app-footer-home" aria-label="PolyCode home">
+            <img
+              src="/images/polycode-logo.png"
+              alt=""
+              className="app-footer-polycode-logo"
+              width={28}
+              height={28}
+              decoding="async"
+            />
+          </Link>
           <span className="app-footer-copy">© {year}</span>
+          <span className="app-footer-project">PolyCode</span>
         </div>
         <a
           className="app-footer-brand"
@@ -495,9 +537,13 @@ function AppRoutes() {
   React.useEffect(() => {
     const path = location.pathname;
     if (
+      path.startsWith("/learn/python-fundamentals") ||
       path.startsWith("/learn/numpy-py") ||
       path.startsWith("/learn/pandas-py") ||
       path.startsWith("/learn/matplotlib-py")
+      path.startsWith("/learn/fastapi-py") ||
+      path.startsWith("/learn/matplotlib-py") ||
+      path.startsWith("/learn/ai_ml-py")
     ) {
       handleLanguageSelect("Python", { stay: true });
     } else if (path.startsWith("/learn/js-fundamentals")) {
@@ -679,6 +725,81 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/learn/dsa-cpp"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <DsaHub />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/dsa-cpp/lesson/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <DsaLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/dsa-cpp/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <DsaLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/python-fundamentals"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <PythonFundamentalsHub />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/python-fundamentals/lesson/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <PythonFundamentalsLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
           path="/learn/numpy-py"
           element={
             <ThemedShell theme={theme}>
@@ -764,6 +885,98 @@ function AppRoutes() {
                 selectedLanguage={selectedLanguage}
               >
                 <PandasLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        {/* FastAPI Python Course Routes */}
+        <Route
+          path="/learn/fastapi-py"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <FastapiHub />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/fastapi-py/lesson/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <FastapiLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/fastapi-py/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <FastapiLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        {/* AI/ML Python Course Routes */}
+        <Route
+          path="/learn/ai_ml-py"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <AiHub />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/ai_ml-py/lesson/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <AiLessonPage />
+              </LearnShell>
+            </ThemedShell>
+          }
+        />
+        <Route
+          path="/learn/ai_ml-py/:lessonId"
+          element={
+            <ThemedShell theme={theme}>
+              <LearnShell
+                theme={theme}
+                onThemeChange={handleThemeChange}
+                onGoToStackPicker={goToStackPicker}
+                selectedLanguage={selectedLanguage}
+              >
+                <AiLessonPage />
               </LearnShell>
             </ThemedShell>
           }

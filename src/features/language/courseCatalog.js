@@ -9,6 +9,8 @@ import {
   Terminal,
   Presentation,
   Coffee,
+  BrainCircuit,
+  Server,
 } from "lucide-react";
 
 export function languageKey(value = "") {
@@ -62,6 +64,15 @@ export const languageCourses = {
       href: "/learn/pointers-cpp",
       accent: "#00d4ff",
     },
+    {
+      title: "Data Structures & Algorithms (DSA) C++",
+      tag: "DSA Course",
+      icon: Grid3x3,
+      description:
+        "Comprehensive DSA track in C++: complexity, arrays, lists, trees, graphs, hashing, sorting, and problem-solving patterns.",
+      href: "/learn/dsa-cpp",
+      accent: "#a78bfa",
+    },
   ],
   "c++": [
     {
@@ -82,8 +93,26 @@ export const languageCourses = {
       href: "/learn/pointers-cpp",
       accent: "#00d4ff",
     },
+    {
+      title: "Data Structures & Algorithms (DSA) C++",
+      tag: "DSA Course",
+      icon: Grid3x3,
+      description:
+        "Comprehensive DSA track in C++: complexity, arrays, lists, trees, graphs, hashing, sorting, and problem-solving patterns.",
+      href: "/learn/dsa-cpp",
+      accent: "#a78bfa",
+    },
   ],
   python: [
+    {
+      title: "Python Fundamentals",
+      tag: "Core Course",
+      icon: Terminal,
+      description:
+        "Beginner → Pro: syntax, types, control flow, collections, functions, files, OOP basics, and modern Python habits — 8 chapters with hands-on challenges.",
+      href: "/learn/python-fundamentals",
+      accent: "#3776ab",
+    },
     {
       title: "NumPy · py",
       tag: "Data Course",
@@ -101,6 +130,15 @@ export const languageCourses = {
         "Series, DataFrames, filtering, cleaning, groupby, merges, and CSV workflows with Pandas.",
       href: "/learn/pandas-py",
       accent: "#059669",
+    },
+    {
+      title: "FastAPI · py",
+      tag: "API Course",
+      icon: Server,
+      description:
+        "Beginner → advanced REST APIs: routes, Pydantic, CRUD, dependencies, routers, testing, and capstone.",
+      href: "/learn/fastapi-py",
+      accent: "#009688",
     },
     {
       tag: "Data Visualization",
@@ -222,15 +260,19 @@ export const courseStackGroups = [
 export const learnNavByLanguage = {
   cpp: [
     { label: "OOPs", to: "/learn/oops-cpp" },
-    { label: "Pointers", to: "/learn/pointers-cpp" },
+     { label: "Pointers", to: "/learn/pointers-cpp" },
+     { label: "DSA", to: "/learn/dsa-cpp" },
   ],
   "c++": [
     { label: "OOPs", to: "/learn/oops-cpp" },
-    { label: "Pointers", to: "/learn/pointers-cpp" },
+     { label: "Pointers", to: "/learn/pointers-cpp" },
+     { label: "DSA", to: "/learn/dsa-cpp" },
   ],
   python: [
+    { label: "Fundamentals", to: "/learn/python-fundamentals" },
     { label: "NumPy", to: "/learn/numpy-py" },
     { label: "Pandas", to: "/learn/pandas-py" },
+    { label: "FastAPI", to: "/learn/fastapi-py" },
     { label: "Matplotlib", to: "/learn/matplotlib-py" },
   ],
   javascript: [{ label: "JS Basics", to: "/learn/js-fundamentals" }],
@@ -241,7 +283,20 @@ export const learnNavByLanguage = {
     { label: "Spring Boot", to: "/hub?language=Java&category=04-professional" },
     { label: "Mastery", to: "/hub?language=Java&category=05-mastery" },
   ],
+  php: [{ label: "PHP Basics", to: "/learn/php-fundamentals" }],
+  csharp: [{ label: "C# Basics", to: "/learn/c-sharp-fundamentals" }],
+  "c#": [{ label: "C# Basics", to: "/learn/c-sharp-fundamentals" }],
+  ruby: [{ label: "Ruby Basics", to: "/learn/ruby-fundamentals" }],
 };
+
+const learnNavLanguageAliases = {
+  "c++": "cpp",
+  "c#": "csharp",
+};
+
+function normalizeLearnNavLanguageKey(key = "") {
+  return learnNavLanguageAliases[key] || key;
+}
 
 /** Infer stack from an active /learn/* route when language is not set. */
 export function inferLanguageFromLearnPath(pathname = "") {
@@ -252,9 +307,13 @@ export function inferLanguageFromLearnPath(pathname = "") {
     return "cpp";
   }
   if (
+    pathname.startsWith("/learn/python-fundamentals") ||
     pathname.startsWith("/learn/numpy-py") ||
     pathname.startsWith("/learn/pandas-py") ||
     pathname.startsWith("/learn/matplotlib-py")
+    pathname.startsWith("/learn/fastapi-py") ||
+    pathname.startsWith("/learn/matplotlib-py") ||
+    pathname.startsWith("/learn/ai_ml-py")
   ) {
     return "python";
   }
@@ -263,16 +322,49 @@ export function inferLanguageFromLearnPath(pathname = "") {
   }
   if (pathname.startsWith("/learn/java-fundamentals")) {
     return "java";
+  if (pathname.startsWith("/learn/php-fundamentals")) {
+    return "php";
+  }
+  if (pathname.startsWith("/learn/ruby-fundamentals")) {
+    return "ruby";
+  }
+  if (pathname.startsWith("/learn/c-sharp-fundamentals")) {
+    return "csharp";
   }
   return null;
 }
 
 export function getLearnNavLinks(selectedLanguage, pathname = "") {
-  const key =
+  const group = getActiveLearnNavGroup(selectedLanguage, pathname);
+  return group?.courses || [];
+}
+
+/**
+ * Active language stack for navbar: one dropdown per stack instead of many top-level links.
+ */
+export function getActiveLearnNavGroup(selectedLanguage, pathname = "") {
+  const rawKey =
     languageKey(selectedLanguage || "") ||
     inferLanguageFromLearnPath(pathname) ||
     "";
-  return learnNavByLanguage[key] || [];
+  if (!rawKey) return null;
+
+  const stackKey = normalizeLearnNavLanguageKey(rawKey);
+  const courses =
+    learnNavByLanguage[rawKey] || learnNavByLanguage[stackKey] || [];
+  if (!courses.length) return null;
+
+  const stack =
+    courseStackGroups.find((entry) => entry.id === stackKey) ||
+    courseStackGroups.find((entry) => entry.id === rawKey);
+
+  return {
+    id: stackKey,
+    label: stack?.label || selectedLanguage || stackKey,
+    accent: stack?.accent,
+    languagePath: stack?.languagePath || `/language/${selectedLanguage || stack?.label || ""}`,
+    courses,
+  };
 }
 
 export function getLanguageLandingCourses(languageKeyValue) {
